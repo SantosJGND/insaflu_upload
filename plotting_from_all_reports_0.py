@@ -168,6 +168,7 @@ def main(all_rep_dir, metadata_dir, param, x_axis, y_axis, plot_type, separator)
     plot_s_graphics(df1, param, x_axis, y_axis, plot_type, all_rep_dir, separator)
 
 
+##### Testing
 all_rep_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\André\\Mestrado - Bioinfo\\2º Ano\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples\\all_reports_file_folder"
 metadata_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\André\\Mestrado - Bioinfo\\2º Ano\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples\\out_files\\barcode11\\metadata_files"
 param="Description"
@@ -177,6 +178,5 @@ plot_type="line" #or 'line'
 separator="workflow"
 directory = "out_graphs"
 
-main(all_rep_dir, metadata_dir, param, x_axis, y_axis, plot_type, separator)
-
+#main(all_rep_dir, metadata_dir, param, x_axis, y_axis, plot_type, separator)
 
