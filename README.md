@@ -1,5 +1,5 @@
 # Estagio_insa_scripts
-Scripts funcionais
+Functional scripts
 
 To use the following scripts some packages are required:
 
