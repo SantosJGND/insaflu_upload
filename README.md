@@ -39,8 +39,17 @@ This script was designed to run in an interactive python shell to create plots f
 Initially it opens the all_reports_file as a pandas dataframe so it can add columns with information such as the time taken running the previous script 'mfmc_version01.py' and the workflow codes. This is done to ensure the maximum amount of information available to be plotted according to the user's preference.
 There are various parameters with the corresponding inputs in order to garantee the possibility of fully customizing the generated plots.
 
-Input messages
-"Input the all_reports.tsv file directory:\n > "
+#### Plot settings
+| parameters | options | description |
+| :------: | :----: | ----------- |
+| `category` | column names | Create a plot for each chosen ***category***. The possible categories are all the column names in the all_reports.tsv file. |
+| `x axis` | column names | Select the category represented in the ***x axis*** of the plot. The possible categories are all the column names in the all_reports.tsv file. |
+| `y axis` | column names | Select the category represented in the ***y axis*** of the plot. The possible categories are all the column names in the all_reports.tsv file. |
+| `parameter` | column names | For each chosen category, see the possible possibilities of a certain ***parameter***. The possible categories are all the column names in the all_reports.tsv file. |
+| `plot type` | "scatter" or "line" | Type of plot. *Note* if **line** is chosen, plots with only 1 point will appear empty. |
+| `save plot` | "y" or "n" | If you want to save the generated plots in a folder. |
+
+
 
 Example of usage: creating a plot for each accession ID of 'Cov (%)' by 'time elapsed' so we can visualize how the coverage was increasing across time.
 
