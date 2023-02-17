@@ -13,6 +13,7 @@ This script was designed to run in command line while a sequencing machine is wo
 The script can be used in sequencing runs with barcoding enabled or disabled, as long as that information is provided as an argument to the function (described below).
 
 #### Script options and arguments
+All the options need to be prefixed with "--". Example: ***--bcopt***.
 
 | options | arguments | description |
 | :------: | :----: |-----------|
