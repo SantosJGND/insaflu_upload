@@ -21,6 +21,7 @@ The script can be used in sequencing runs with barcoding enabled or disabled, as
 - --tsv_t_dir: the directory of the metadata template tsv file.
 ##### Example of usage in command line.
 >> python mfmc_version01.py --bcopt y --ff gz --min_dir C:\Users\metagenomics_test\fast_pass --out_dir C:\Users\metagenomics_test\fast_pass C:\Users\metagenomics_test\out_files --tsv_t_n meta_template.tsv --tsv_t_dir C:\Users\metagenomics_test\metadata_templates
+
 This would run for barcoded samples (--bcopt y) in the format fastq.gz (--ff gz), the sequencing files where in *C:\Users\metagenomics_test\fast_pass* (--min_dir [DIRECTORY]).....
 
 
