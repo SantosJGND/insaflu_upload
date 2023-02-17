@@ -35,7 +35,7 @@ This would run for barcoding *enabled*, for sequecing files in the format *fastq
 - pandas
 - seaborn
 
-This script was designed to run in command line to create plots from the output of the Pathogen identification present in 'View all reports' tsv file. By creating plots of the processed data from the pathogen identification, the interpretation of the results get a visual support to auxiliate in the decision making.
+This script was designed to run in an interactive python shell to create plots from the output of the Pathogen identification present in 'View all reports' tsv file. By creating plots of the processed data from the pathogen identification, the interpretation of the results get a visual support to auxiliate in the decision making.
 Initially it opens the all_reports_file as a pandas dataframe so it can add columns with information such as the time taken running the previous script 'mfmc_version01.py' and the workflow codes. This is done to ensure the maximum amount of information available to be plotted according to the user's preference.
 
 #### Script options and arguments
