@@ -12,7 +12,6 @@ This script was designed to run in command line while a sequencing machine is wo
 The script can be used in sequencing runs with barcoding enabled or disabled, as long as that information is provided as an argument to the function (described below).
 
 #### Script options and arguments
-
 | options | arguments | description |
 | :------: | :----: |-----------|
 | `bcopt` | 'y' or 'n' | barcoding option, ***y*** (yes) or ***n*** (no), depending on the sequencer settings.|
