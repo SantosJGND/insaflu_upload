@@ -36,10 +36,10 @@ This would run for barcoding *enabled*, for sequecing files in the format *fastq
 
 This script was designed to run in an interactive python shell to create plots from the output of the Pathogen identification present in 'View all reports' tsv file. By creating plots of the processed data from the pathogen identification, the interpretation of the results get a visual support to auxiliate in the decision making.
 Initially it opens the all_reports_file as a pandas dataframe so it can add columns with information such as the time taken running the previous script 'mfmc_version01.py' and the workflow codes. This is done to ensure the maximum amount of information available to be plotted according to the user's preference.
+There are various input messages according to
 
-#### Script options and arguments
-- all_rep_dir: the directory of the all_reports.tsv file.
-- metadata dir
+Input messages
+"Input the all_reports.tsv file directory:\n > "
 
 Example of usage: creating a plot for each accession ID of 'Cov (%)' by 'time elapsed' so we can visualize how the coverage was increasing across time.
 
