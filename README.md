@@ -1,8 +1,7 @@
-# Estagio_insa_scripts
+# This repository has 2 working and functional scripts:
 The usage of this script requires Python to be installed.
 
-## This repository has 2 working and functional scripts:
-### - mfmc_version01.py
+## - mfmc_version01.py
 ###### Needed package installation:
 - pandas
 - getopt
@@ -31,7 +30,7 @@ The script can be used in sequencing runs with barcoding enabled or disabled, as
 This would run for barcoding *enabled*, for sequecing files in the format *fastq.gz*, the sequencing files where in *C:\Users\metagenomics_test\fast_pass*, the output files were stored in *C:\Users\processed_data*, the metadata template file name was *meta_template.tsv* and the metadata template file directory was *C:\Users\metagenomics_test\metadata_templates*.
 
 
-### - plotting_from_all_reports_0.py
+## - plotting_from_all_reports_0.py
 ###### Needed package installation:
 - pandas
 - seaborn
