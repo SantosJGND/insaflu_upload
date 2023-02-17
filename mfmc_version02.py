@@ -449,6 +449,7 @@ def main_w_bar(file_format, minion_file_dir, out_files_dir, tsv_temp_name, tsv_t
 """For non-barcodded samples"""
 def pre_main_no_bar(minion_file_dir, already_processed_data_dic, pross_numbers, file_format, start_time, out_bar_dir, tsv_temp_name, tsv_temp_dir):
     #Directory of the fastq.gz files from the MinIon
+    fastq_dir=minion_file_dir
     os.chdir(minion_file_dir)
 
     #This storages all the lines read from each fastq.gz files to create the merged.
@@ -490,7 +491,7 @@ def pre_main_no_bar(minion_file_dir, already_processed_data_dic, pross_numbers, 
                 os.chdir(merged_gz_dir)
                 
                 #Read and write
-                merged_name=read_and_write(file, file_format, last_file_read, pross_numbers, run_name, run_num)
+                merged_name=read_and_write(file, file_format, last_file_read, pross_numbers, run_name, run_num, fastq_dir, merged_gz_dir)
                 
                 
                 ### METADATA ###
@@ -649,54 +650,3 @@ def main_main():
 
 if __name__ == "__main__":
     main_main()
-
-
-
-
-
-
-
-
-
-
-## TESTING
-# bar_code_option="y"
-# file_format="fastq"
-# minion_file_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples\\fastq_test_files"
-# output_dir="q"
-# output_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
-# tsv_temp_name="template_metadata.tsv"
-# tsv_temp_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
-
-# main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir)
-
-
-# # # ##### Testing
-# bar_code_option="y"
-# file_format="gz"
-# minion_file_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples\\20221110_metagenomics_test_gz"
-# output_dir="q"
-# output_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
-# tsv_temp_name="template_metadata.tsv"
-# tsv_temp_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
-
-# main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir)
-
-# tsv_temp_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
-
-# main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir)
-
-
-# # # ##### Testing
-# bar_code_option="y"
-# file_format="gz"
-# minion_file_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples\\20221110_metagenomics_test_gz"
-# output_dir="q"
-# output_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
-# tsv_temp_name="template_metadata.tsv"
-# tsv_temp_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
-
-# main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir)
-
-
-
