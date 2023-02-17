@@ -13,7 +13,7 @@ The script can be used in sequencing runs with barcoding enabled or disabled, as
 - output dir: the directory for the merged and metadata files created by the script.
 - tsv template name: the name of the metadata template tsv file (must contain the extension of the file; i.e. 'meta_template.tsv').
 - tsv template dir: the directory of the metadata template tsv file.
-#### Example of usage
+#### Example of usage in command line.
 >> python mfmc_version01.py --bcopt y --ff gz --min_dir C:\Users\metagenomics_test\fast_pass --out_dir C:\Users\metagenomics_test\fast_pass C:\Users\metagenomics_test\out_files --tsv_t_n meta_template.tsv --tsv_t_dir C:\Users\metagenomics_test\metadata_templates
 ##### Needed package installation:
 - pandas
