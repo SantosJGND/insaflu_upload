@@ -3,6 +3,11 @@ The usage of this script requires Python to be installed.
 
 ## This repository has 2 working and functional scripts:
 ### - mfmc_version01.py
+###### Needed package installation:
+- pandas
+- getopt
+- sys
+- natsort
 This script was designed to run in command line while a sequencing machine is working (generating .fastq or .fastq.gz files on a user-defined folder) to create both concatenated files (.fastq or .fastq.gz, which cumulatively store the information "read" by the sequencer and compile them into a merged file) and create the correspondant metadata .tsv file (which will come from a template metadata tsv file selected by the user). The template metadata file is also in this repository under the name "template_metadata.tsv" already filled with an example.
 The script can be used in sequencing runs with barcoding enabled or disabled, as long as that information is provided as an argument to the function (described below).
 
@@ -15,11 +20,6 @@ The script can be used in sequencing runs with barcoding enabled or disabled, as
 - tsv template dir: the directory of the metadata template tsv file.
 ##### Example of usage in command line.
 >> python mfmc_version01.py --bcopt y --ff gz --min_dir C:\Users\metagenomics_test\fast_pass --out_dir C:\Users\metagenomics_test\fast_pass C:\Users\metagenomics_test\out_files --tsv_t_n meta_template.tsv --tsv_t_dir C:\Users\metagenomics_test\metadata_templates
-###### Needed package installation:
-- pandas
-- getopt
-- sys
-- natsort
 
 
 
