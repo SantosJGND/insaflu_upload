@@ -13,18 +13,18 @@ This script was designed to run in command line while a sequencing machine is wo
 The script can be used in sequencing runs with barcoding enabled or disabled, as long as that information is provided as an argument to the function (described below).
 
 #### Script options and arguments
-All the options need to be prefixed with "--". Example: ***--bcopt***.
 
 | options | arguments | description |
 | :------: | :----: |-----------|
-| `--bcopt` | 'y' or 'n' | barcoding option, ***y*** (yes) or ***n*** (no), depending on the sequencer settings.|
-| `--ff` | 'fastq' or 'gz' | file format, which can be ***fastq*** (fastq) or ***gz*** (fastq.gz), depending on the sequencer settings.|
-| `--min_dir` | 'q' or directory | sequencer output folder, which can be ***q*** for the default folder or the directory of the sequencer output (i.e. 'fast_pass' for MinION), depending on the sequencer settings.|
-| `--out_dir` | directory | the directory for output files (the merged and metadata files created by the script). In this directory, if barcoding is enabled, a folder will be created in the specified directory for each barcode folder, containing itself two folders: 'merged_files' and 'metadata_files', each with the corresponding files. If barcoding is disabled, the specified directory will only contain the two folders, 'merged_files' and 'metadata_files', each with the corresponding files.|
-| `--tsv_t_n` | name | the name of the metadata template tsv file (must contain the extension of the file; i.e. 'meta_template.tsv').|
-| `--tsv_t_dir` | directory | the directory of the metadata template tsv file. |
+| `bcopt` | 'y' or 'n' | barcoding option, ***y*** (yes) or ***n*** (no), depending on the sequencer settings.|
+| `ff` | 'fastq' or 'gz' | file format, which can be ***fastq*** (fastq) or ***gz*** (fastq.gz), depending on the sequencer settings.|
+| `min_dir` | 'q' or directory | sequencer output folder, which can be ***q*** for the default folder or the directory of the sequencer output (i.e. 'fast_pass' for MinION), depending on the sequencer settings.|
+| `out_dir` | directory | the directory for output files (the merged and metadata files created by the script). In this directory, if barcoding is enabled, a folder will be created in the specified directory for each barcode folder, containing itself two folders: 'merged_files' and 'metadata_files', each with the corresponding files. If barcoding is disabled, the specified directory will only contain the two folders, 'merged_files' and 'metadata_files', each with the corresponding files.|
+| `tsv_t_n` | name | the name of the metadata template tsv file (must contain the extension of the file; i.e. 'meta_template.tsv').|
+| `tsv_t_dir` | directory | the directory of the metadata template tsv file. |
 
 ##### Example of usage in command line.
+All the options need to be prefixed with "--". Example: ***--bcopt***.
 > \>\>python mfmc_version01.py --bcopt y --ff gz --min_dir C:\Users\metagenomics_test\fast_pass --out_dir C:\Users\processed_data --tsv_t_n meta_template.tsv --tsv_t_dir C:\Users\metagenomics_test\metadata_templates
 
 This would run for barcoding *enabled*, for sequecing files in the format *fastq.gz*, the sequencing files where in *C:\Users\metagenomics_test\fast_pass*, the output files were stored in *C:\Users\processed_data*, the metadata template file name was *meta_template.tsv* and the metadata template file directory was *C:\Users\metagenomics_test\metadata_templates*.
