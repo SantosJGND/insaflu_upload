@@ -14,7 +14,7 @@ The script can be used in sequencing runs with barcoding enabled or disabled, as
 
 #### Script options and arguments
 
-| options | arguments | description |
+| options | arguments           | description |
 |:----------|-----------|-----------|
 |--bcopt    | 'y' or 'n'| barcoding option, yes (y) or no (n), depending on the sequencer settings.|
 |--ff       | 'fastq' or 'gz'| file format, which can be 'fastq' (fastq) or 'fastq.gz' (gz), depending on the sequencer settings.|
