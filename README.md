@@ -14,8 +14,8 @@ The script can be used in sequencing runs with barcoding enabled or disabled, as
 
 #### Script options and arguments
 
-| &nbsp; &nbsp; options &nbsp; &nbsp; | arguments | description |
-| :-------: | :----: |-----------|
+| options | arguments | description |
+| :---------------: | :----: |-----------|
 | `--bcopt` | 'y' or 'n' | barcoding option, *y* (yes) or *n* (no), depending on the sequencer settings.|
 | `--ff` | 'fastq' or 'gz' | file format, which can be *fastq* (fastq) or *gz* (fastq.gz), depending on the sequencer settings.|
 | `--min_dir` | 'q' or directory | sequencer output folder, which can be 'q' for the default folder or the directory of the sequencer output (i.e. 'fast_pass' for MinION), depending on the sequencer settings.|
