@@ -1,5 +1,4 @@
 # Estagio_insa_scripts
-Functional scripts
 
 ## This repository has 2 working and functional scripts:
 ### - mfmc_version01.py
