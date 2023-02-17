@@ -1,8 +1,9 @@
 # Estagio_insa_scripts
 Functional scripts
 
+This repository has 2 working and functional scripts:
+- 
 To use the following scripts some packages are required:
-
 - pandas
 - seaborn
 - natsort
