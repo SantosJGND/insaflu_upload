@@ -16,7 +16,7 @@ The script can be used in sequencing runs with barcoding enabled or disabled, as
 
 | options | arguments | description |
 | :------: | :----: |-----------|
-| `--bcopt` | 'y' or 'n' | barcoding option, ***y*** (yes) or ***n*** (no), depending on the sequencer settings.|
+| `--bcopt` | 'y' or 'n' | #### barcoding option, ***y*** (yes) or ***n*** (no), depending on the sequencer settings.|
 | `--ff` | 'fastq' or 'gz' | file format, which can be ***fastq*** (fastq) or ***gz*** (fastq.gz), depending on the sequencer settings.|
 | `--min_dir` | 'q' or directory | sequencer output folder, which can be ***q*** for the default folder or the directory of the sequencer output (i.e. 'fast_pass' for MinION), depending on the sequencer settings.|
 | `--out_dir` | directory | the directory for output files (the merged and metadata files created by the script). In this directory, if barcoding is enabled, a folder will be created in the specified directory for each barcode folder, containing itself two folders: 'merged_files' and 'metadata_files', each with the corresponding files. If barcoding is disabled, the specified directory will only contain the two folders, 'merged_files' and 'metadata_files', each with the corresponding files.|
