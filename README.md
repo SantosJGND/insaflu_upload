@@ -13,12 +13,12 @@ This script was designed to run in command line while a sequencing machine is wo
 The script can be used in sequencing runs with barcoding enabled or disabled, as long as that information is provided as an argument to the function (described below).
 
 #### Function arguments
---bcopt : barcoding option, which can be 'y' or 'n', depending on the sequencer settings (user defined).
---ff : file format, which can be 'fastq' or 'gz', depending on the sequencer settings (user defined).
---min_dir : sequencer output folder, which can be 'q' for the default folder or the directory of the sequencer output (i.e. 'fast_pass' for MinION), depending on the sequencer settings (user defined).
---out_dir: the directory for output files (the merged and metadata files created by the script). In this directory, if barcoding is enabled, a folder will be created in the specified directory for each barcode folder, containing itself two folders: 'merged_files' and 'metadata_files', each with the corresponding files. If barcoding is disabled, the specified directory will only contain the two folders, 'merged_files' and 'metadata_files', each with the corresponding files.
---tsv_t_n: the name of the metadata template tsv file (must contain the extension of the file; i.e. 'meta_template.tsv').
---tsv_t_dir: the directory of the metadata template tsv file.
+- --bcopt : barcoding option, which can be 'y' or 'n', depending on the sequencer settings (user defined).
+- --ff : file format, which can be 'fastq' or 'gz', depending on the sequencer settings (user defined).
+- --min_dir : sequencer output folder, which can be 'q' for the default folder or the directory of the sequencer output (i.e. 'fast_pass' for MinION), depending on the sequencer settings (user defined).
+- --out_dir: the directory for output files (the merged and metadata files created by the script). In this directory, if barcoding is enabled, a folder will be created in the specified directory for each barcode folder, containing itself two folders: 'merged_files' and 'metadata_files', each with the corresponding files. If barcoding is disabled, the specified directory will only contain the two folders, 'merged_files' and 'metadata_files', each with the corresponding files.
+- --tsv_t_n: the name of the metadata template tsv file (must contain the extension of the file; i.e. 'meta_template.tsv').
+- --tsv_t_dir: the directory of the metadata template tsv file.
 ##### Example of usage in command line.
 >> python mfmc_version01.py --bcopt y --ff gz --min_dir C:\Users\metagenomics_test\fast_pass --out_dir C:\Users\metagenomics_test\fast_pass C:\Users\metagenomics_test\out_files --tsv_t_n meta_template.tsv --tsv_t_dir C:\Users\metagenomics_test\metadata_templates
 
