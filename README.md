@@ -8,6 +8,7 @@ The usage of this script requires Python to be installed.
 - getopt
 - sys
 - natsort
+
 This script was designed to run in command line while a sequencing machine is working (generating .fastq or .fastq.gz files on a user-defined folder) to create both concatenated files (.fastq or .fastq.gz, which cumulatively store the information "read" by the sequencer and compile them into a merged file) and create the correspondant metadata .tsv file (which will come from a template metadata tsv file selected by the user). The template metadata file is also in this repository under the name "template_metadata.tsv" already filled with an example.
 The script can be used in sequencing runs with barcoding enabled or disabled, as long as that information is provided as an argument to the function (described below).
 
