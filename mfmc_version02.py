@@ -582,73 +582,73 @@ def main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_nam
 #h:b:f:m:
 """
 
-# def main_main():
-#     try:
-#         opts, args = getopt.getopt(sys.argv[1:], "h", ["Help","bcopt=", "ff=", "min_dir=", "out_dir=", "tsv_t_n=","tsv_t_dir="])
-#         # print()
-#         # print("#######")
-#         # print('ARGV      :', sys.argv[1:])
-#         # print ('OPTIONS   :', opts)
-#         # print("#######")
-#     except getopt.GetoptError as err:
-#         print(str(err))
-#         sys.exit(2)
+def main_main():
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "h", ["Help","bcopt=", "ff=", "min_dir=", "out_dir=", "tsv_t_n=","tsv_t_dir="])
+        # print()
+        # print("#######")
+        # print('ARGV      :', sys.argv[1:])
+        # print ('OPTIONS   :', opts)
+        # print("#######")
+    except getopt.GetoptError as err:
+        print(str(err))
+        sys.exit(2)
     
     
-#     used_args={}
-#     bar_code_option=None
-#     file_format=None
-#     minion_file_dir=None
-#     output_dir=None
-#     tsv_temp_name=None
-#     tsv_temp_dir=None
+    used_args={}
+    bar_code_option=None
+    file_format=None
+    minion_file_dir=None
+    output_dir=None
+    tsv_temp_name=None
+    tsv_temp_dir=None
     
-#     used_args={"--bcopt":None,
-#                 "--ff":None,
-#                 "--min_dir":None,
-#                 "--out_dir":None,
-#                 "--tsv_t_n":None,
-#                 "--tsv_t_dir":None}
+    used_args={"--bcopt":None,
+                "--ff":None,
+                "--min_dir":None,
+                "--out_dir":None,
+                "--tsv_t_n":None,
+                "--tsv_t_dir":None}
     
-#     for o, a in opts:
-#         if o in ("-h", "--Help"):
-#             print(HELP)
-#             sys.exit()
-#         elif o in ("--bcopt"):
-#             bar_code_option=a
-#             used_args[o]=a
-#         elif o in ("--ff"):
-#             file_format=a
-#             used_args[o]=a
-#         elif o in ("--min_dir"):
-#             minion_file_dir=a
-#             used_args[o]=a
-#         elif o in ("--out_dir"):
-#             output_dir=a
-#             used_args[o]=a
-#         elif o in ("--tsv_t_n"):
-#             tsv_temp_name=a
-#             used_args[o]=a
-#         elif o in ("--tsv_t_dir"):
-#             tsv_temp_dir=a
-#             used_args[o]=a
-#         else:
-#             assert False, "unhandled option"
+    for o, a in opts:
+        if o in ("-h", "--Help"):
+            print(HELP)
+            sys.exit()
+        elif o in ("--bcopt"):
+            bar_code_option=a
+            used_args[o]=a
+        elif o in ("--ff"):
+            file_format=a
+            used_args[o]=a
+        elif o in ("--min_dir"):
+            minion_file_dir=a
+            used_args[o]=a
+        elif o in ("--out_dir"):
+            output_dir=a
+            used_args[o]=a
+        elif o in ("--tsv_t_n"):
+            tsv_temp_name=a
+            used_args[o]=a
+        elif o in ("--tsv_t_dir"):
+            tsv_temp_dir=a
+            used_args[o]=a
+        else:
+            assert False, "unhandled option"
     
-#     res=True
-#     for key in used_args.keys():
-#         if used_args[key]==None:
-#             print(f"{key} argument is missing.")
-#             res=False
+    res=True
+    for key in used_args.keys():
+        if used_args[key]==None:
+            print(f"{key} argument is missing.")
+            res=False
     
-#     if res==True:
-#         main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir)
-#     else:
-#         return
+    if res==True:
+        main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir)
+    else:
+        return
             
 
-# if __name__ == "__main__":
-#     main_main()
+if __name__ == "__main__":
+    main_main()
 
 
 
@@ -666,6 +666,22 @@ def main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_nam
 # output_dir="q"
 # output_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
 # tsv_temp_name="template_metadata.tsv"
+# tsv_temp_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
+
+# main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir)
+
+
+# # # ##### Testing
+# bar_code_option="y"
+# file_format="gz"
+# minion_file_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples\\20221110_metagenomics_test_gz"
+# output_dir="q"
+# output_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
+# tsv_temp_name="template_metadata.tsv"
+# tsv_temp_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
+
+# main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir)
+
 # tsv_temp_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
 
 # main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir)
