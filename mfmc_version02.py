@@ -145,8 +145,6 @@ def read_and_write(filename, file_format, last_file_read, file_nums, run_name, r
     Takes:                              Returns:
         str*str*lst*dic*str*str             lst
     """
-    print("beggining of read and write. last_file_read: ", last_file_read)
-    
     if last_file_read==[]:
         os.chdir(fastq_dir)
         
@@ -197,7 +195,6 @@ def read_and_write(filename, file_format, last_file_read, file_nums, run_name, r
             
             merged_name=run_name
             merged_name+=str(file_nums[0])+"-"+str(file_nums[-1])+".fastq.gz"
-            
             
             #Reading the file
             try:
@@ -257,8 +254,6 @@ def read_and_write(filename, file_format, last_file_read, file_nums, run_name, r
             
             
             #Writing
-            print("last_f_read_2: ",last_file_read)
-            print("not empty; ", last_file_read[-1], merged_name)
             os.chdir(merged_gz_dir)
             shutil.copyfile(last_file_read[-1], merged_name)
             
@@ -297,8 +292,6 @@ def read_and_write(filename, file_format, last_file_read, file_nums, run_name, r
             lines=fhr.read().splitlines()
             
             #Writing
-            print("last_f_read_2: ",last_file_read)
-            print("not empty; ", last_file_read[-1], merged_name)
             os.chdir(merged_gz_dir)
             shutil.copyfile(last_file_read[-1], merged_name)
             
@@ -324,7 +317,6 @@ def read_and_write(filename, file_format, last_file_read, file_nums, run_name, r
             fhw.close()
             
             last_file_read.append(merged_name)
-    print("end of read and write. last_file_read: ", last_file_read, "\n")
     return merged_name
     
 ####################          5 - Main functions          #####################
@@ -378,7 +370,6 @@ def pre_main_bar(bar_dir, barcode, already_processed_data_dic, pross_numbers, fi
                 
                 #Read and write
                 merged_name=read_and_write(file, file_format, last_file_read, pross_numbers[barcode], run_name, run_num, fastq_dir, merged_gz_dir)
-                print("pre_main_bar -> merged_name: ", merged_name)
                 
                 
                 ### METADATA ###
@@ -650,3 +641,35 @@ def main_main():
 
 if __name__ == "__main__":
     main_main()
+
+
+
+
+
+
+
+
+
+
+# # TESTING
+# bar_code_option="y"
+# file_format="fastq"
+# minion_file_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples\\fastq_test_files"
+# output_dir="q"
+# output_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
+# tsv_temp_name="template_metadata.tsv"
+# tsv_temp_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
+
+# main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir)
+
+
+# # # ##### Testing
+# bar_code_option="y"
+# file_format="gz"
+# minion_file_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples\\20221110_metagenomics_test_gz"
+# output_dir="q"
+# output_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
+# tsv_temp_name="template_metadata.tsv"
+# tsv_temp_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
+
+# main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir)
