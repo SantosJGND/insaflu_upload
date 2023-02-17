@@ -426,7 +426,7 @@ def main_w_bar(file_format, minion_file_dir, out_files_dir, tsv_temp_name, tsv_t
                 already_processed_data[barcode]=[]
                 
             print("looking in folder: ", barcode)
-            nwd=minion_file_dir+"\\"+barcode
+            nwd=os.path.join(minion_file_dir, barcode)
             
             already_processed_data=pre_main_bar(nwd, barcode, already_processed_data, pross_nums, file_format, start_time, out_bar_dir, tsv_temp_name, tsv_temp_dir)
                
