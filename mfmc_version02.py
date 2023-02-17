@@ -533,24 +533,6 @@ def main_no_bar(file_format, minion_file_dir, out_files_dir, tsv_temp_name, tsv_
 
 
 def main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir):
-    """
-    INSTRUCTIONS:
-        
-    bar_code_option - 'y' or 'n'
-    
-    file_format - 'fastq' or 'gz'
-    
-    minion_file_dir - fast_pass directory
-    
-    output_dir - output files directory or 'q'. 
-                 If 'q':
-                     Creates a 'out_files' folder in the same folder of the 'fast_pass'.
-    
-                 Else: 
-                     Create a folder called 'out_files' 
-                     with 2 folders: 'merged_files' and 'metadata_files' which will
-                     have the corresponding output files.
-    """
     input("Press any key to start the script.")
     if output_dir!="q":
         out_files_dir=os.path.join(output_dir,"out_files")
