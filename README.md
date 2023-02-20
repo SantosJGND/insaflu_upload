@@ -10,7 +10,7 @@ The usage of these scripts requires Python to be installed.
 
 This script was designed to run in command line while a sequencing machine is working (generating .fastq or .fastq.gz files on a user-defined folder ***X***) to create the concatenated files in real-time as they show up in the ***X*** folder and create the correspondant metadata .tsv file (which will come from a template metadata tsv file selected by the user). The template metadata file is also in this repository under the name "template_metadata.tsv" already filled with an example.
 The script can be used in sequencing runs with barcoding enabled or disabled, as long as that information is provided as an argument to the function (described below).
-By default the script conducts searches the ***X*** folder every 5 seconds.
+By default, the script conducts searches in the ***X*** folder every 5 seconds.
 
 #### Script options and arguments
 | options | arguments | description |
