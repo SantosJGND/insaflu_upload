@@ -48,8 +48,8 @@ There are various parameters with the corresponding inputs in order to garantee 
 | `x axis` | column name | Select the category represented in the ***x axis*** of the plot. The possible categories are all the column names in the all_reports.tsv file. |
 | `y axis` | column name | Select the category represented in the ***y axis*** of the plot. The possible categories are all the column names in the all_reports.tsv file. |
 | `parameter` | column name | For each chosen category, see the possible possibilities of a certain ***parameter***. The possible categories are all the column names in the all_reports.tsv file. |
-| `plot type` | "scatter" or "line" | Type of plot. *Note* if **line** is chosen, plots with only 1 point will appear empty. |
-| `save plot` | "y" or "n" | If you want to save the generated plots in a folder. |
+| `plot type` | `scatter` or `line` | Type of plot. *Note* if **line** is chosen, plots with only 1 point will appear empty. |
+| `save plot` | `y` or `n` | If you want to save the generated plots in a folder. |
 
 
 
