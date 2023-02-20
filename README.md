@@ -52,23 +52,13 @@ There are various parameters with the corresponding inputs in order to garantee 
 
 
 
-Example of usage: creating a plot for each accession ID of 'Cov (%)' by 'time elapsed' so we can visualize how the coverage was increasing across time.
+##### Example of usage
+Creating a plot for each accession IDs (accID) of 'Cov (%)' (y-axis) by 'time elapsed' (x-axis), also representing the different workflows 'workflow'.
+The resultant plots will look like this:
 
-![accID-NC_003310 1](https://user-images.githubusercontent.com/116633498/220186420-b3f1d6f7-1dbf-46c6-9bd4-4b26d54d0670.jpeg =250x250)
+<img src="https://user-images.githubusercontent.com/116633498/220186420-b3f1d6f7-1dbf-46c6-9bd4-4b26d54d0670.jpeg" width="500" title="Example output1"> <img src="https://user-images.githubusercontent.com/116633498/220186423-605d466c-3177-4476-8c7b-20d381f9f116.jpeg" width="500" title="Example output2">
 
-![accID-NC_003391 1](https://user-images.githubusercontent.com/116633498/220186423-605d466c-3177-4476-8c7b-20d381f9f116.jpeg | width=600)
-
-
-
-
-
-
-
-
-
-
-
-
+AAAAA
 
 
 
