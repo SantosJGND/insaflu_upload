@@ -13,8 +13,18 @@ import getopt, sys
 import shutil
 from natsort import natsorted
 
+
+"""
+- Limpar as descrições do --help e assim
+- tudo tem que sair concatenado em gz
+
+- de sleep em sleep fazer uma pasta com 'lattest_compilation_to_upload' todos os últimos concatenados por amostra 
+(barcode10, barcode11, etc) + um ficheiro de metadata com todos os dados respetivos dos concatenados totais.
+
+"""
+
 #CONSTANTS
-HELP="\nArguments to the function:\n--bcopt ['y' or 'n'] : barcode option\n--ff ['fastq' or 'gz'] : file format\n--min_dir [DIRECTORY OF THE FAST_PASS] : minion file directory\n--out_dir [OUTPUT DIRECTORY or 'q' for the default]\n--tsv_t_n [TSV TEMPLATE FILE NAME]\n--tsv_t_dir [TSV TEMPLATE DIRECTORY]"
+HELP="\nOptions and arguments:\n--bcopt ['y' or 'n'] : If there's barcodding select 'y', if there's no barcodding, select 'n'.\n--ff ['fastq' or 'gz'] : file format of the files comming out of the sequencing machine.\n--min_dir [DIRECTORY OF THE FAST_PASS] : directory of the files being produced by the sequencing machine (typically the 'fast_pass' folder).\n--out_dir [OUTPUT DIRECTORY or 'q' for the default] : desired directory to storage the output files\n--tsv_t_n [TSV TEMPLATE FILE NAME] : name of the tsv template\n--tsv_t_dir [TSV TEMPLATE DIRECTORY] : directory of the tsv template file\n--sleep [TIME SLEEP] : amount of time (in seconds) for the script to hold, between search cycles"
 ARGUMENT_OPTIONS=["--bcopt", "--ff", "--min_dir", "--out_dir", "--tsv_t_n","--tsv_t_dir"]
 
 #### Auxilary functions
@@ -82,6 +92,8 @@ def read_tsv_template(tsv_template_filename, tsv_temp_dir):
     pd.options.mode.chained_assignment = None  # default='warn'
     
     template_tsv["sample name"][0]=""
+    template_tsv["fastq1"][0]=""
+    template_tsv["fastq2"][0]=""
     
     return template_tsv
           
@@ -91,11 +103,14 @@ def create_tsv(filename, file_format, tsv_template_filename, tsv_temp_dir, time_
         #Get sample_name
         proj_name=filename[:-6]
         
+        ff_name=proj_name+"_metadata.tsv"
+        
         #Create the tsv template
         tsv_temp=read_tsv_template(tsv_template_filename, tsv_temp_dir)
         pd.options.mode.chained_assignment = None  # default='warn'
         os.chdir(metadata_dir)
         tsv_temp["sample name"][0]=proj_name
+        tsv_temp["fastq1"][0]=filename
         tsv_temp["time elapsed"]=time_elapsed
         
         #Save the metadata.tsv file
@@ -105,6 +120,7 @@ def create_tsv(filename, file_format, tsv_template_filename, tsv_temp_dir, time_
     if file_format=="gz":
         #Get sample_name
         proj_name=filename[:-9]
+        ff_name=proj_name+"_metadata.tsv"
         
         #Create the tsv template
         tsv_temp=read_tsv_template(tsv_template_filename, tsv_temp_dir)
@@ -112,6 +128,7 @@ def create_tsv(filename, file_format, tsv_template_filename, tsv_temp_dir, time_
         os.chdir(metadata_dir)
         tsv_temp["sample name"][0]=proj_name
         tsv_temp["time elapsed"]=time_elapsed
+        tsv_temp["fastq1"][0]=filename
         
         #Save the metadata.tsv file
         ff_name=proj_name+"_metadata.tsv"
@@ -400,8 +417,17 @@ def pre_main_bar(bar_dir, barcode, already_processed_data_dic, pross_numbers, fi
                 
     return already_processed_data_dic
    
-def main_w_bar(file_format, minion_file_dir, out_files_dir, tsv_temp_name, tsv_temp_dir):
+def main_w_bar(file_format, minion_file_dir, out_files_dir, tsv_temp_name, tsv_temp_dir, sleep_time):
     start_time=time.time()
+    
+    default_sleep=5
+    real_sleep=0
+    if sleep_time!=None:
+        real_sleep=sleep_time
+    else:
+        real_sleep=default_sleep
+    
+    print(f"going to sleep for {real_sleep}")
     
     run_num=0
     
@@ -433,7 +459,7 @@ def main_w_bar(file_format, minion_file_dir, out_files_dir, tsv_temp_name, tsv_t
             print()
     
         run_num+=1
-        time.sleep(5)
+        time.sleep(int(real_sleep))
                 
      
         
@@ -511,8 +537,17 @@ def pre_main_no_bar(minion_file_dir, already_processed_data_dic, pross_numbers, 
                 
     return already_processed_data_dic
 
-def main_no_bar(file_format, minion_file_dir, out_files_dir, tsv_temp_name, tsv_temp_dir):
+def main_no_bar(file_format, minion_file_dir, out_files_dir, tsv_temp_name, tsv_temp_dir, sleep_time):
     start_time=time.time()
+    
+    default_sleep=5
+    real_sleep=0
+    if sleep_time!=None:
+        real_sleep=sleep_time
+    else:
+        real_sleep=default_sleep
+    
+    print(f"going to sleep for {real_sleep}")
     
     run_num=0
     
@@ -527,12 +562,12 @@ def main_no_bar(file_format, minion_file_dir, out_files_dir, tsv_temp_name, tsv_
         print()
     
         run_num+=1
-        time.sleep(5)
+        time.sleep(int(real_sleep))
 
 
 
 
-def main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir):
+def main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir, sleep_time):
     input("Press any key to start the script.")
     if output_dir!="q":
         out_files_dir=os.path.join(output_dir,"out_files")
@@ -546,9 +581,9 @@ def main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_nam
         os.makedirs(out_files_dir)
     
     if bar_code_option=="y":
-        main_w_bar(file_format, minion_file_dir, out_files_dir, tsv_temp_name, tsv_temp_dir)
+        main_w_bar(file_format, minion_file_dir, out_files_dir, tsv_temp_name, tsv_temp_dir, sleep_time)
     if bar_code_option=="n":
-        main_no_bar(file_format, minion_file_dir, out_files_dir, tsv_temp_name, tsv_temp_dir)
+        main_no_bar(file_format, minion_file_dir, out_files_dir, tsv_temp_name, tsv_temp_dir, sleep_time)
      
 
 ############################ SYSTEM STUFF ##########################
@@ -558,7 +593,7 @@ def main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_nam
 
 def main_main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "h", ["Help","bcopt=", "ff=", "min_dir=", "out_dir=", "tsv_t_n=","tsv_t_dir="])
+        opts, args = getopt.getopt(sys.argv[1:], "h", ["Help","bcopt=", "ff=", "min_dir=", "out_dir=", "tsv_t_n=","tsv_t_dir=", "sleep="])
         # print()
         # print("#######")
         # print('ARGV      :', sys.argv[1:])
@@ -576,13 +611,15 @@ def main_main():
     output_dir=None
     tsv_temp_name=None
     tsv_temp_dir=None
+    sleep_time=None
     
     used_args={"--bcopt":None,
                 "--ff":None,
                 "--min_dir":None,
                 "--out_dir":None,
                 "--tsv_t_n":None,
-                "--tsv_t_dir":None}
+                "--tsv_t_dir":None,
+                "--sleep":None}
     
     for o, a in opts:
         if o in ("-h", "--Help"):
@@ -606,52 +643,23 @@ def main_main():
         elif o in ("--tsv_t_dir"):
             tsv_temp_dir=a
             used_args[o]=a
+        elif o in ("--sleep"):
+            sleep_time=a
+            used_args[o]=a
         else:
             assert False, "unhandled option"
     
     res=True
     for key in used_args.keys():
-        if used_args[key]==None:
+        if used_args[key]==None and key!="--sleep":
             print(f"{key} argument is missing.")
             res=False
     
     if res==True:
-        main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir)
+        main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir, sleep_time)
     else:
         return
             
 
 if __name__ == "__main__":
     main_main()
-
-
-
-
-
-
-
-
-
-
-# # TESTING
-# bar_code_option="y"
-# file_format="fastq"
-# minion_file_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples\\fastq_test_files"
-# output_dir="q"
-# output_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
-# tsv_temp_name="template_metadata.tsv"
-# tsv_temp_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
-
-# main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir)
-
-
-# # # ##### Testing
-# bar_code_option="y"
-# file_format="gz"
-# minion_file_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples\\20221110_metagenomics_test_gz"
-# output_dir="q"
-# output_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
-# tsv_temp_name="template_metadata.tsv"
-# tsv_temp_dir="C:\\Users\\andre\\OneDrive - FCT NOVA\\André\\Mestrado - Bioinfo\\2º Ano\\Projeto em Multi-Ómicas - INSA\\teste_1\\testing_files\\testing_merging_and_metadata_files\\barcoded_samples"
-
-# main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir)
