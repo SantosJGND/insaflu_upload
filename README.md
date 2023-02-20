@@ -1,5 +1,5 @@
 # This repository has 2 working and functional scripts:
-The usage of this script requires Python to be installed.
+The usage of these scripts requires Python to be installed.
 
 ## mfmc_version01.py
 ###### Needed package installation:
