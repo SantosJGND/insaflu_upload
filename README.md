@@ -21,6 +21,7 @@ By default, the script conducts searches in the ***X*** folder every 5 seconds.
 | `out_dir` | directory | the directory for output files (the merged and metadata files created by the script). In this directory, if barcoding is enabled, a folder will be created in the specified directory for each barcode folder, containing itself two folders: 'merged_files' and 'metadata_files', each with the corresponding files. If barcoding is disabled, the specified directory will only contain the two folders, 'merged_files' and 'metadata_files', each with the corresponding files.|
 | `tsv_t_n` | name | the name of the metadata template tsv file (must contain the extension of the file; i.e. 'meta_template.tsv').|
 | `tsv_t_dir` | directory | the directory of the metadata template tsv file. |
+| `sleep` | number in seconds | the amount of time you want the script to stop running between each search cycle |
 
 ***Note***: All the options need to be prefixed with "--".
 
