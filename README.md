@@ -54,10 +54,17 @@ There are various parameters with the corresponding inputs in order to garantee 
 
 Since this script has inputs incorporated, its only needed to read the messages on screen and input the according information.
 ##### Example of usage in a python interactive shell 
-> \>\>main()
-> \>\>Input the all_reports.tsv file directory:
-   \> C:\Users\all_reports_files
-  ...
+> \>\> main()
+> 
+> **Input the all_reports.tsv file directory:**
+> 
+> \> C:\Users\all_reports_files
+> 
+> **Input the metadata files directory:**
+> 
+> \> C:\Users\out_files\metadata_files
+> 
+> (Etc...)
   
-
+After the script runs, with the parameters showed in this example, the created plots will look like this:
 <img src="https://user-images.githubusercontent.com/116633498/220186420-b3f1d6f7-1dbf-46c6-9bd4-4b26d54d0670.jpeg" width="500" title="Example output1"> <img src="https://user-images.githubusercontent.com/116633498/220186423-605d466c-3177-4476-8c7b-20d381f9f116.jpeg" width="500" title="Example output2">
