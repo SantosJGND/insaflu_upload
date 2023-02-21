@@ -1,7 +1,7 @@
 # This repository has 2 working and functional scripts:
 The usage of these scripts requires Python to be installed.
 
-## mfmc_version01.py
+## mfmc.py
 ###### Needed package installation:
 - pandas
 - getopt
@@ -31,7 +31,7 @@ By default, the script conducts searches in the ***X*** folder every 5 seconds.
 This would run for barcoding *enabled*, for sequecing files in the format *fastq.gz*, the sequencing files where in *C:\Users\metagenomics_test\fast_pass*, the output files were stored in *C:\Users\processed_data*, the metadata template file name was *meta_template.tsv* and the metadata template file directory was *C:\Users\metagenomics_test\metadata_templates*.
 
 
-## plotting_from_all_reports_2.py
+## plotting_from_all_reports.py
 ###### Needed package installation:
 - pandas
 - seaborn
@@ -52,13 +52,12 @@ There are various parameters with the corresponding inputs in order to garantee 
 | `save plot` | `y` or `n` | If you want to save the generated plots in a folder. |
 
 
-
-##### Example of usage in a python interactive shell
-Remember the main function arguments: 
-> main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir, sleep_time).
-So, the code would be:
->> main("y", "gz", "C:\\Users\\fast_pass", "C:\\Users\\example_output_folder", "metadata_template.tsv", "C:\\Users\\metadata_templates", "5")
-Creating a plot for each accession IDs (accID) of 'Cov (%)' (y-axis) by 'time elapsed' (x-axis), also representing the different workflows 'workflow'.
-The resultant plots will look like this:
+Since this script has inputs incorporated, its only needed to read the messages on screen and input the according information.
+##### Example of usage in a python interactive shell 
+> \>\>main()
+> \>\>Input the all_reports.tsv file directory:
+   \> C:\Users\all_reports_files
+  ...
+  
 
 <img src="https://user-images.githubusercontent.com/116633498/220186420-b3f1d6f7-1dbf-46c6-9bd4-4b26d54d0670.jpeg" width="500" title="Example output1"> <img src="https://user-images.githubusercontent.com/116633498/220186423-605d466c-3177-4476-8c7b-20d381f9f116.jpeg" width="500" title="Example output2">
