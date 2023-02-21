@@ -53,13 +53,12 @@ There are various parameters with the corresponding inputs in order to garantee 
 
 
 
-##### Example of usage
+##### Example of usage in a python interactive shell
+Remember the main function arguments: 
+> main(bar_code_option, file_format, minion_file_dir, output_dir, tsv_temp_name, tsv_temp_dir, sleep_time).
+So, the code would be:
+>> main("y", "gz", "C:\\Users\\fast_pass", "C:\\Users\\example_output_folder", "metadata_template.tsv", "C:\\Users\\metadata_templates", "5")
 Creating a plot for each accession IDs (accID) of 'Cov (%)' (y-axis) by 'time elapsed' (x-axis), also representing the different workflows 'workflow'.
 The resultant plots will look like this:
 
 <img src="https://user-images.githubusercontent.com/116633498/220186420-b3f1d6f7-1dbf-46c6-9bd4-4b26d54d0670.jpeg" width="500" title="Example output1"> <img src="https://user-images.githubusercontent.com/116633498/220186423-605d466c-3177-4476-8c7b-20d381f9f116.jpeg" width="500" title="Example output2">
-
-AAAAA
-
-
-
