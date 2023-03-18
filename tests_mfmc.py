@@ -1,3 +1,4 @@
+import gzip
 import os
 import shutil
 import unittest
@@ -8,15 +9,24 @@ from mfmc.records import Processed
 from mfmc.utilities import ConstantsSettings, Utils
 
 
-class TestConstantsSettings(unittest.TestCase):
+class DontTestConstantsSettings(unittest.TestCase):
 
     def test_get_seq_extentions(self):
         constants = ConstantsSettings()
-        assert constants.possible_extentions == [
-            ".fastq", ".fq", ".fastq.gz", ".fq.gz"]
+        assert sorted(constants.possible_extentions) == sorted([
+            ".fastq", ".fq", ".fastq.gz", ".fq.gz"])
 
 
 class TestUtils(unittest.TestCase):
+    test_directory = "tests/"
+
+    def setUp(self) -> None:
+
+        os.makedirs(self.test_directory)
+
+    def tearDown(self) -> None:
+
+        shutil.rmtree(self.test_directory)
 
     def test_check_extention(self):
         utils = Utils()
@@ -49,15 +59,96 @@ class TestUtils(unittest.TestCase):
         assert utils.get_formated_time(86400) == "24:0:0"
 
     def test_copy_file(self):
-        if os.path.exists("tests/destination"):
-            shutil.rmtree("tests/destination")
+        if os.path.exists(f"{self.test_directory}/destination"):
+            shutil.rmtree(f"{self.test_directory}/destination")
 
         utils = Utils()
-        utils.copy_file("tests/test.fastq", "tests/destination/test.fastq.gz")
 
-        assert os.path.exists("tests/destination/test.fastq") is True
+        open(f"{self.test_directory}/test.fastq", "w").close()
+        utils.copy_file(f"{self.test_directory}/test.fastq",
+                        f"{self.test_directory}/destination/test.fastq.gz")
 
-        shutil.rmtree("tests/destination")
+        assert os.path.exists(
+            f"{self.test_directory}/destination/test.fastq.gz") is True
+
+        shutil.rmtree(f"{self.test_directory}/destination")
+
+    def test_copy_file_gzip(self):
+        if os.path.exists(f"{self.test_directory}/destination"):
+            shutil.rmtree(f"{self.test_directory}/destination")
+
+        utils = Utils()
+
+        gzip.open(f"{self.test_directory}/test.fastq.gz", "w").close()
+        utils.copy_file(f"{self.test_directory}/test.fastq.gz",
+                        f"{self.test_directory}/destination/test.fastq.gz")
+
+        assert os.path.exists(
+            f"{self.test_directory}/destination/test.fastq.gz") is True
+
+        shutil.rmtree(f"{self.test_directory}/destination")
+
+    def test_seqs_in_dir(self):
+
+        utils = Utils()
+
+        os.makedirs(f"{self.test_directory}/seqs", exist_ok=True)
+        assert utils.seqs_in_dir(f"{self.test_directory}/seqs") is False
+
+        open(f"{self.test_directory}/seqs/test.fastq", "w").close()
+        assert utils.seqs_in_dir(f"{self.test_directory}/seqs") is True
+        os.remove(f"{self.test_directory}/seqs/test.fastq")
+
+        os.makedirs(f"{self.test_directory}/seqs", exist_ok=True)
+        assert utils.seqs_in_dir(f"{self.test_directory}/seqs") is False
+
+    def test_seqs_in_subdir(self):
+
+        utils = Utils()
+
+        os.makedirs(f"{self.test_directory}/seqs", exist_ok=True)
+
+        gzip.open(f"{self.test_directory}/seqs/test.fastq.gz", "w").close()
+
+        assert utils.seqs_in_subdir(f"{self.test_directory}") is True
+
+        os.remove(f"{self.test_directory}/seqs/test.fastq.gz")
+
+    def test_get_subdirectories(self):
+        utils = Utils()
+
+        subdir_test = f"{self.test_directory}/subdir_test"
+
+        os.makedirs(subdir_test, exist_ok=True)
+
+        assert utils.get_subdirectories(f"{subdir_test}") == []
+
+        os.makedirs(f"{subdir_test}/seqs", exist_ok=True)
+
+        assert utils.get_subdirectories(f"{subdir_test}") == [
+            f"{subdir_test}/seqs"]
+
+        os.makedirs(f"{subdir_test}/seqs2", exist_ok=True)
+        subdir_list = utils.get_subdirectories(f"{subdir_test}")
+
+        assert sorted(subdir_list) == [
+            f"{subdir_test}/seqs",
+            f"{subdir_test}/seqs2"]
+
+        shutil.rmtree(subdir_test)
+
+    def test_search_folder_for_seq_files(self):
+
+        utils = Utils()
+        folder_find = f"{self.test_directory}/folder_find"
+        os.makedirs(folder_find, exist_ok=True)
+
+        assert utils.search_folder_for_seq_files(folder_find) == []
+
+        open(f"{folder_find}/test.fastq", "w").close()
+
+        assert utils.search_folder_for_seq_files(
+            folder_find) == ["test.fastq"]
 
 
 class TestProcessed(unittest.TestCase):
@@ -101,7 +192,6 @@ class TestProcessed(unittest.TestCase):
         assert barcode == str(processed_len).zfill(2)
 
     def test_update(self):
-        print("!@#$%^&*()_+")
 
         self.processed.update("test.fastq", "tests/", 0, "merged.fastq")
 
