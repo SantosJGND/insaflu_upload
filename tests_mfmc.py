@@ -5,8 +5,136 @@ import unittest
 
 import pandas as pd
 
+from mfmc.mfmc import DirectoryProcessing, PreMain, RunConfig
 from mfmc.records import Processed
 from mfmc.utilities import ConstantsSettings, Utils
+
+
+class TestRunConfig(unittest.TestCase):
+
+    def test_run_config(self):
+        run_config = RunConfig("te")
+
+        assert run_config.output_dir == "te"
+
+
+class TestPreMain(unittest.TestCase):
+    test_dir = "tests/"
+    real_sleep = 5
+    fastq_dir: str
+    fastq_sbdir: str
+    output_dir: str
+    run_metadata: RunConfig
+    premain: PreMain
+
+    def setUp(self) -> None:
+
+        os.makedirs(self.test_dir, exist_ok=True)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fastq_dir = os.path.join(self.test_dir, "fastq")
+        self.fastq_sbdir = os.path.join(self.fastq_dir, "subdir")
+        self.output_dir = os.path.join(self.test_dir, "output")
+
+        if os.path.exists(self.fastq_dir):
+            shutil.rmtree(self.fastq_dir)
+        os.makedirs(self.fastq_dir, exist_ok=True)
+
+        self.run_metadata = RunConfig(
+            output_dir=self.output_dir,
+        )
+
+        self.premain = PreMain(
+            real_sleep=self.real_sleep,
+            fastq_dir=self.fastq_dir,
+            run_metadata=self.run_metadata,
+        )
+
+    def tearDown(self) -> None:
+
+        shutil.rmtree(self.test_dir)
+
+    def test_premain_init(self):
+
+        processed = Processed(
+            output_dir=self.run_metadata.output_dir
+        )
+
+        assert self.premain.real_sleep == self.real_sleep
+        assert self.premain.fastq_dir == self.fastq_dir
+        assert self.premain.run_metadata == self.run_metadata
+        assert self.premain.processed.output_dir == processed.output_dir
+        assert self.premain.processed.processed.equals(
+            processed.processed) is True
+
+    def test_prep_output_dirs(self):
+
+        self.premain.prep_output_dirs()
+
+        assert os.path.exists(self.output_dir) is True
+
+    def test_assess_depth_fastqs(self):
+
+        self.premain.assess_depth_fastqs()
+        assert self.premain.fastq_depth == -1
+
+        open(os.path.join(self.fastq_dir, "test.fastq"), "w").close()
+
+        self.premain.assess_depth_fastqs()
+        assert self.premain.fastq_depth == 0
+        os.remove(os.path.join(self.fastq_dir, "test.fastq"))
+
+        os.makedirs(self.fastq_sbdir, exist_ok=True)
+        open(os.path.join(self.fastq_sbdir, "test.fastq"), "w").close()
+
+        self.premain.assess_depth_fastqs()
+        assert self.premain.fastq_depth == 1
+
+        shutil.rmtree(self.fastq_sbdir)
+
+    def test_get_directories_to_process(self):
+
+        assert self.premain.get_directories_to_process() == []
+
+        open(os.path.join(self.fastq_dir, "test.fastq"), "w").close()
+
+        self.premain.assess_depth_fastqs()
+        assert self.premain.get_directories_to_process() == [self.fastq_dir]
+
+        os.remove(os.path.join(self.fastq_dir, "test.fastq"))
+
+        os.makedirs(self.fastq_sbdir, exist_ok=True)
+        open(os.path.join(self.fastq_sbdir, "test.fastq"), "w").close()
+        self.premain.assess_depth_fastqs()
+
+        assert self.premain.get_directories_to_process() == [self.fastq_sbdir]
+
+        shutil.rmtree(self.fastq_sbdir)
+
+    def test_process_fastq_dict(self):
+        open(os.path.join(self.fastq_dir, "test.fastq"), "w").close()
+
+        self.premain.prep_output_dirs().assess_depth_fastqs().\
+            process_fastq_dict()
+
+        output_dir_merged = os.path.join(
+            self.output_dir,
+            os.path.basename(self.fastq_dir),
+            DirectoryProcessing.merged_dir_name)
+
+        output_file = f"{os.path.basename(self.fastq_dir)}_00-00.fastq.gz"
+
+        assert os.path.exists(output_dir_merged) is True
+
+        assert os.listdir(output_dir_merged) == [output_file]
+
+        os.remove(os.path.join(self.fastq_dir, "test.fastq"))
+
+        shutil.rmtree(self.output_dir)
+
+        self.premain.processed.delete_records()
 
 
 class DontTestConstantsSettings(unittest.TestCase):
@@ -172,10 +300,6 @@ class TestProcessed(unittest.TestCase):
         assert self.processed.output_file == "processed.tsv"
 
     def test_read_processed(self):
-        processed_file = os.path.join(
-            self.processed.output_dir,
-            self.processed.output_file
-        )
 
         self.processed.delete_records()
         processed = self.processed.read_processed()
@@ -186,12 +310,14 @@ class TestProcessed(unittest.TestCase):
         run_name, barcode = self.processed.get_run_barcode(
             "test.fastq", "tests/")
 
-        processed_len = len(self.processed.processed)
+        processed_len = len(
+            self.processed.processed[self.processed.processed.dir == "tests/"])
 
         assert run_name == "test"
         assert barcode == str(processed_len).zfill(2)
 
     def test_update(self):
+        self.processed.delete_records()
 
         self.processed.update("test.fastq", "tests/", 0, "merged.fastq")
 
@@ -226,6 +352,10 @@ class TestProcessed(unittest.TestCase):
         run_name, barcode = self.processed.get_run_info("test.fastq")
         assert run_name == "test"
         assert barcode == ""
+
+        run_name, barcode = self.processed.get_run_info("test_00.fastq")
+        assert run_name == "test_00"
+        assert barcode == "00"
 
     def test_file_exists(self):
 

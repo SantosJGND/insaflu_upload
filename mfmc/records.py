@@ -9,10 +9,9 @@ class Processed:
     """
     class to keep track of processed files
     """
-    output_dir = ""
     output_file = "processed.tsv"
 
-    processed = pd.DataFrame(
+    processed_template = pd.DataFrame(
         columns=[
             "fastq",
             "dir",
@@ -40,7 +39,7 @@ class Processed:
             processed = pd.read_csv(
                 processed_file, sep='\t')
         except FileNotFoundError:
-            processed = self.processed
+            processed = self.processed_template.copy()
 
         return processed
 
@@ -79,7 +78,7 @@ class Processed:
         """
         filename = os.path.basename(filename)
         run_name, ext = os.path.splitext(filename)
-        if ext == "gz":
+        if ext == ".gz":
             run_name = os.path.splitext(run_name)[0]
 
         run_num = self.get_run_num_from_filename(run_name)
@@ -159,12 +158,14 @@ class Processed:
         self.processed.loc[len(self.processed)] = [
             os.path.basename(fastq_file), fastq_dir, barcode, time_elapsed, merged_file]
 
-    def export(self, output_dir):
+    def export(self, output_dir: str, output_file: str = "processed.tsv"):
         """
         export processed
         """
         self.processed.to_csv(os.path.join(
-            output_dir, "processed.tsv"), sep="\t", index=False)
+            output_dir, output_file), sep="\t", index=False)
+
+        return self
 
     def delete_records(self):
         """

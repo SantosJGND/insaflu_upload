@@ -72,6 +72,21 @@ class InfluProcessed(Processed):
 
         return metadata
 
+    def export_metadata(self, run_metadata: InfluConfig):
+        """
+        export metadata
+        """
+        influ_metadata = self.generate_metadata()
+
+        influ_metadata.to_csv(
+            os.path.join(
+                run_metadata.metadata_dir,
+                run_metadata.tsv_temp_name
+            ),
+            sep="\t",
+            index=False,
+        )
+
 
 class InfluDirectoryProcessing(DirectoryProcessing):
     """
@@ -155,7 +170,7 @@ class InsafluUpload(PreMain):
         super().__init__(fastq_dir, run_metadata, sleep_time)
 
         self.processed = InfluProcessed(
-            self.run_metadata.output_dir,
+            self.run_metadata.metadata_dir,
         )
 
         self.run_metadata = run_metadata
@@ -172,18 +187,12 @@ class InsafluUpload(PreMain):
 
     def export_global_metadata(self):
 
-        influ_metadata = self.processed.generate_metadata()
-
-        influ_metadata.to_csv(
-            os.path.join(
-                self.run_metadata.metadata_dir,
-                self.run_metadata.tsv_temp_name
-            ),
-            sep="\t",
-            index=False,
+        self.prep_metadata_dir()
+        self.processed.export_metadata(
+            self.run_metadata
         )
 
     def run(self):
         super().run()
-        self.prep_metadata_dir()
+
         self.export_global_metadata()

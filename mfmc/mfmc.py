@@ -50,6 +50,7 @@ class PreMain:
     fastq_dir: str
     start_time: float
     real_sleep: int = 5
+    fastq_depth: int = -1
 
     processed: Processed
     fastq_avail: pd.DataFrame = pd.DataFrame()
@@ -75,17 +76,24 @@ class PreMain:
         """
         os.makedirs(self.run_metadata.output_dir, exist_ok=True)
 
+        return self
+
     def assess_depth_fastqs(self):
 
         utils = Utils()
+        fastq_depth = -1
 
         if utils.seqs_in_dir(self.fastq_dir):
-            return 0
+            fastq_depth = 0
 
         if utils.seqs_in_subdir(self.fastq_dir):
-            return 1
+            fastq_depth = 1
 
-        return -1
+        fastq_depth - 1
+
+        self.fastq_depth = fastq_depth
+
+        return self
 
     def assess_proceed(self):
         """
@@ -93,6 +101,8 @@ class PreMain:
         """
         if self.fastq_depth == -1:
             print("No fastq files found in: ", self.fastq_dir)
+
+        return self
 
     def get_directories_to_process(self):
         """
@@ -121,14 +131,21 @@ class PreMain:
 
             directory_processing.process_folder()
 
+        return self
+
     def run(self):
         """
         run single pass
         """
-        self.prep_output_dirs()
-        self.fastq_depth = self.assess_depth_fastqs()
-        self.assess_proceed()
-        self.process_fastq_dict()
+        (self.prep_output_dirs()
+         .assess_depth_fastqs()
+         .assess_proceed()
+         .process_fastq_dict())
+
+        # self.assess_depth_fastqs()
+        # self.assess_proceed()
+        # self.process_fastq_dict()
+
         self.processed.export(
             self.run_metadata.output_dir
         )
