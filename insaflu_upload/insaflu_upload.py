@@ -35,11 +35,11 @@ class InfluDirectoryProcessing(DirectoryProcessing):
     def prep_output_dirs(self):
         """create output dirs"""
 
-        for dir in [
+        for outdir in [
             self.merged_gz_dir,
             self.metadir,
         ]:
-            os.makedirs(dir, exist_ok=True)
+            os.makedirs(outdir, exist_ok=True)
 
     @staticmethod
     def get_filename_from_path(file_name):
@@ -140,7 +140,8 @@ class InfluDirectoryProcessing(DirectoryProcessing):
 
     def process_folder(self):
         """
-        process folder
+        process folder, merge and update metadata
+        submit to televir only the last file.
         """
 
         self.prep_output_dirs()
@@ -201,9 +202,6 @@ class InsafluPreMain(PreMain):
         process samples
         """
 
-        # combined = self.uploader.logger.get_log().reset_index(drop=True)
-        # for sample_id, sample_df in combined.groupby("sample_id"):
-
         samples_list = self.uploader.logger.generate_samples_list()
 
         for sample in samples_list:
@@ -216,7 +214,6 @@ class InsafluPreMain(PreMain):
 
             if status == InsafluSampleCodes.STATUS_UPLOADED:
 
-                ###
                 status = self.uploader.deploy_televir_sample(
                     sample.sample_id,
                     file_name,
@@ -226,15 +223,8 @@ class InsafluPreMain(PreMain):
 
             if status == InsafluSampleCodes.STATUS_SUBMITTED:
 
-                project_file = self.uploader.get_project_results(
-                    project_name,
-                )
-
-                self.uploader.download_file(
-                    project_file, os.path.join(
-                        self.run_metadata.metadata_dir,
-                        os.path.basename(project_file),
-                    )
+                self.uploader.get_project_results(
+                    project_name, self.run_metadata.metadata_dir
                 )
 
     def run(self):

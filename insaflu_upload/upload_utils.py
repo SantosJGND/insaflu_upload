@@ -466,19 +466,13 @@ class InsafluUpload(ABC):
         pass
 
     @abstractmethod
-    def get_project_status(self, project_name: str):
-        """
-        get project status"""
-        pass
-
-    @abstractmethod
-    def get_project_id(self, project_name: str):
+    def translate_project_results(self,  project_results: str):
         """
         get project id"""
         pass
 
     @abstractmethod
-    def get_project_results(self, project_id: str):
+    def get_project_results(self, project_name: str, output_dir: str):
         """
         get project results"""
         pass
@@ -671,7 +665,7 @@ class InsafluUploadRemote(InsafluUpload):
         success = self.check_submission_success(output)
 
         if success:
-            print(f"Metadata submission success: ", metadata_path)
+            print("Metadata submission success: ", metadata_path)
 
         success_tag = InsafluSampleCodes.STATUS_UPLOADED if success else InsafluSampleCodes.STATUS_SUBMISSION_ERROR
 
@@ -762,16 +756,15 @@ class InsafluUploadRemote(InsafluUpload):
 
         return submit_status
 
-    def get_project_status(self, project_name: str):
+    def translate_project_results(self, project_results: str) -> str:
+        project_file = project_results.splitlines()[-1]
 
-        results = self.get_project_results(project_name)
+        if not project_file.startswith("/"):
+            return ""
 
-        return self.translate_televir_status_output(results)
+        return project_file
 
-    def get_project_id(self):
-        pass
-
-    def get_project_results(self, project_name: str):
+    def get_project_results(self, project_name: str, output_dir: str):
 
         command = [
             "python3",
@@ -789,6 +782,13 @@ class InsafluUploadRemote(InsafluUpload):
             command
         )
 
-        submit_status = submit_status.splitlines()[-1]
+        project_file = self.translate_project_results(submit_status)
 
-        return submit_status
+        local_file = os.path.join(
+            output_dir,
+            os.path.basename(project_file),
+        )
+
+        self.download_file(
+            project_file, local_file
+        )
