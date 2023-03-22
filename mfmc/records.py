@@ -22,6 +22,7 @@ class Processed:
 
     processed_template = pd.DataFrame(
         columns=[
+            "sample_id",
             "fastq",
             "dir",
             "barcode",
@@ -165,15 +166,33 @@ class Processed:
 
         return run_name, barcode
 
+    @staticmethod
+    def get_sample_id_from_merged(merged_file):
+        """
+        get project name
+        """
+        merged_filename = os.path.basename(merged_file)
+        sample_id = merged_filename.split("_")
+
+        if len(sample_id) == 1:
+            return sample_id[0]
+
+        run_tag = sample_id[-1].split("-")
+        if len(run_tag) == 1:
+            return sample_id[0]
+
+        return "_".join(sample_id[:-1])
+
     def update(self, fastq_file, fastq_dir, time_elapsed, merged_file):
         """
         update processed
         """
 
-        run_name, barcode = self.get_run_barcode(fastq_file, fastq_dir)
+        _, barcode = self.get_run_barcode(fastq_file, fastq_dir)
+        sample_id = self.get_sample_id_from_merged(merged_file)
 
         self.processed.loc[len(self.processed)] = [
-            os.path.basename(fastq_file), fastq_dir, barcode, time_elapsed, merged_file]
+            sample_id, os.path.basename(fastq_file), fastq_dir, barcode, time_elapsed, merged_file]
 
     def export(self, output_dir: str, output_file: str = "processed.tsv"):
         """
@@ -191,6 +210,7 @@ class Processed:
         print("Deleting records...")
         self.processed = pd.DataFrame(
             columns=[
+                "sample_id",
                 "fastq",
                 "dir",
                 "barcode",

@@ -41,7 +41,7 @@ class InfluProcessed(Processed):
 
     def generate_metadata_entry(self, fastq_file: str, fastq_dir: str, merged_file: str):
 
-        proj_name, barcode = self.get_run_barcode(
+        sample_name, _ = self.get_run_barcode(
             merged_file, fastq_dir)
 
         time_elapsed = self.get_file_time(
@@ -49,9 +49,8 @@ class InfluProcessed(Processed):
             fastq_dir=fastq_dir
         )
 
-        # Create the metadata entry
         new_entry = MetadataEntry(
-            sample_name=proj_name,
+            sample_name=sample_name,
             fastq1=merged_file,
             time_elapsed=time_elapsed,
             dir=os.path.dirname(merged_file)

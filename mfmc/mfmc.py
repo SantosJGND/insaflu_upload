@@ -248,7 +248,7 @@ class DirectoryProcessing():
 
     def get_merged_file_name(self, fastq_file, fastq_dir):
 
-        run_name, run_num = self.processed.get_run_barcode(
+        _, run_num = self.processed.get_run_barcode(
             fastq_file, fastq_dir)
         merged_name_prefix = os.path.basename(os.path.dirname(fastq_file))
 

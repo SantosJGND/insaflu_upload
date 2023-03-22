@@ -87,13 +87,18 @@ class InfluDirectoryProcessing(DirectoryProcessing):
             metadata_filename
         )
 
-        sample_name, barcode = self.processed.get_run_barcode(
+        _, barcode = self.processed.get_run_barcode(
             metadata_entry.fastq1, self.metadir)
+
+        sample_id = self.processed.get_sample_id_from_merged(
+            metadata_entry.fastq1
+        )
 
         self.uploader.upload_sample(
             metadata_entry.r1_local,
             metadata_path,
-            barcode,
+            sample_id=sample_id,
+            barcode=barcode,
         )
 
     def submit_sample(self, metadata_entry: MetadataEntry):
@@ -112,18 +117,31 @@ class InfluDirectoryProcessing(DirectoryProcessing):
             insaflu_metadata_file,
         )
 
-    def process_file(self, fastq_file):
+    def televir_process_file(self, fastq_file):
 
-        merged_file = self.create_merged_file(fastq_file, self.fastq_dir)
-
-        self.update_processed(fastq_file, self.fastq_dir,
-                              merged_file)
+        merged_file = self.get_merged_file_name(fastq_file, self.fastq_dir)
 
         new_entry = self.write_metadata(
             fastq_file, self.fastq_dir, merged_file)
 
         self.upload_sample(new_entry)
         self.submit_sample(new_entry)
+
+    def process_folder(self):
+        """
+        process folder
+        """
+
+        self.prep_output_dirs()
+        files_to_process = self.get_files()
+
+        for ix, fastq_file in enumerate(files_to_process):
+            self.process_file(fastq_file)
+
+            if ix == len(files_to_process) - 1:
+                self.televir_process_file(
+                    fastq_file
+                )
 
 
 class InsafluPreMain(PreMain):
@@ -140,6 +158,8 @@ class InsafluPreMain(PreMain):
         self.processed = InfluProcessed(
             self.run_metadata.metadata_dir,
         )
+
+        self.uploader = run_metadata.uploader
 
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.DEBUG)
@@ -165,90 +185,84 @@ class InsafluPreMain(PreMain):
             self.run_metadata
         )
 
+    def logger_iterate(self, iterator):
+        """
+        iterate over iterator and log
+        """
+        for item in iterator:
+            self.logger.info("processing %s", item)
+            yield item
+
     def process_samples(self):
         """
         process samples
         """
-        uploader = self.run_metadata.uploader
-        logs = uploader.logger.get_log()
 
-        combined = self.combined_processed_uploadlog()
+        combined = self.uploader.logger.get_log().reset_index(drop=True)
 
-        for dir, df_dir in combined.groupby("dir"):
-            self.logger.info("processing dir %s", dir)
+        for sample_id, sample_df in combined.groupby("sample_id"):
 
-            for barcode, barcode_df in df_dir.groupby("barcode"):
+            file_path = sample_df[sample_df.tag ==
+                                  "fastq"]["file_path"].values[0]
 
-                file_path = barcode_df[barcode_df.tag ==
-                                       "fastq"]["file_path"].values[0]
+            file_name, _ = self.processed.get_run_info(file_path)
+            project_name = sample_id
 
-                file_name = os.path.basename(file_path)
-                file_name, _ = self.processed.get_run_info(file_name)
+            status = self.uploader.update_sample_status_remote(
+                file_name, file_path)
 
-                project_name = file_name
-                if _ == "":
-                    project_name = file_name.split("_")[:-1]
-                    project_name = "_".join(project_name)
+            if status == InsafluSampleCodes.STATUS_UPLOADED:
 
-                status = uploader.get_sample_status(
+                ###
+                status = self.uploader.deploy_televir_sample(
+                    sample_id,
                     file_name,
+                    file_path,
+                    project_name,
                 )
 
-                self.logger.info("sample %s status %s", file_name, status)
+            if status == InsafluSampleCodes.STATUS_SUBMITTED:
 
-                uploader.update_log(
-                    "NA",
-                    file_path,
-                    file_path,
-                    status,
+                project_file = self.uploader.get_project_results(
+                    project_name,
                 )
 
-                if status == InsafluSampleCodes.STATUS_UPLOADED:
-
-                    ###
-                    submit_status = uploader.launch_televir_project(
-                        file_name, project_name
+                self.uploader.download_file(
+                    project_file, os.path.join(
+                        self.run_metadata.metadata_dir,
+                        os.path.basename(project_file),
                     )
-
-                    # create method to remove files with specific barcode.
-                    if submit_status == InsafluSampleCodes.STATUS_SUBMITTED:
-                        print("Submitted sample: ", file_name)
-                        for file in barcode_df.remote_path.values:
-                            uploader.clean_upload(
-                                file,
-                            )
-
-                        uploader.update_log(
-                            "NA",
-                            file_path,
-                            file_path,
-                            submit_status,
-                        )
-                        status = submit_status
-
-                if status == InsafluSampleCodes.STATUS_SUBMITTED:
-
-                    project_file = uploader.get_project_results(
-                        project_name,
-                    )
-
-                    uploader.download_file(
-                        project_file, os.path.join(
-                            self.run_metadata.metadata_dir,
-                            os.path.basename(project_file),
-                        )
-                    )
+                )
 
     def combined_processed_uploadlog(self):
         """
         combine processed and upload log
         """
 
-        logs = self.run_metadata.uploader.logger.get_log()
+        logs = self.run_metadata.uploader.logger.get_log().reset_index(drop=True)
+        print("#######3")
+        print(logs)
+
+        # get tag from logs into processed
+        processed_tag = self.processed.processed.reset_index(drop=True)
+        print(processed_tag)
+
+        # get tag by mapping file_path to logs
+        processed_tag["tag"] = processed_tag["merged"].map(
+            logs.set_index("file_path")["tag"]
+        )
+
+        # get status by mapping file_path to logs
+        processed_tag["status"] = processed_tag["merged"].map(
+            logs.set_index("file_path")["status"]
+        )
+
         combined = (self.processed.processed.merge(
-            logs, left_on="merged", right_on="file_path", how="outer")
+            logs, left_on="merged", right_on="sample_id", how="outer")
             .rename(columns={"barcode_x": "barcode"})
             .dropna(subset=["barcode"]))
+
+        print(combined)
 
         return combined
 

@@ -187,6 +187,7 @@ class UploadLog:
     STATUS_ERROR = InsafluSampleCodes.STATUS_ERROR
 
     columns = [
+        "sample_id"
         "barcode",
         "file_path",
         "remote_path",
@@ -196,12 +197,19 @@ class UploadLog:
     def __init__(self) -> None:
         self.log = pd.DataFrame(
             columns=[
+                "sample_id",
                 "barcode",
                 "file_path",
                 "remote_path",
                 "status"
             ]
         )
+
+    def get_sample_df(self, sample_id: str) -> pd.DataFrame:
+        """
+        get sample df"""
+
+        return self.log[self.log["sample_id"] == sample_id]
 
     def check_entry_exists(self, file_path: str) -> bool:
         """
@@ -213,18 +221,18 @@ class UploadLog:
         """
         modify entry"""
 
-        self.log.loc[self.log["file_path"] == file_path, "status"] = status
+        self.log.loc[self.log["sample_id"] == file_path, "status"] = status
 
-    def update_log(self, sample_id: str, file_path: str, remote_path: str, status: int):
+    def update_log(self, sample_id: str, barcode: str, file_path: str, remote_path: str, status: int):
         """
         update upload log"""
 
         if self.check_entry_exists(file_path):
             self.modify_entry(file_path, status)
         else:
-            self.new_entry(sample_id, file_path, remote_path)
+            self.new_entry(sample_id, barcode, file_path, remote_path, status)
 
-    def new_entry(self, barcode: str, file_path: str, remote_path: str, status: int = STATUS_UPLOADED, tag: Optional[str] = None) -> None:
+    def new_entry(self, sample_id: str, barcode: str, file_path: str, remote_path: str, status: int = STATUS_UPLOADED, tag: Optional[str] = None) -> None:
         """
         new entry"""
 
@@ -233,6 +241,7 @@ class UploadLog:
                 self.log,
                 pd.DataFrame(
                     {
+                        "sample_id": [sample_id],
                         "barcode": [barcode],
                         "file_path": [file_path],
                         "remote_path": [remote_path],
@@ -291,21 +300,27 @@ class InsafluUpload(ABC):
         pass
 
     @abstractmethod
-    def upload_file(self, file_path, remote_path, file_id: str, tag: str):
+    def upload_file(self, file_path, remote_path, sample_id: str, barcode: str, tag: str):
         """
         upload file"""
         pass
 
     @abstractmethod
-    def download_file(self, remote_path, file_path):
+    def download_file(self, remote_path, local_path):
         """
         download file"""
         pass
 
     @abstractmethod
-    def upload_sample(self, fastq_path: str, metadata_path: str, sample_id: str):
+    def upload_sample(self, fastq_path: str, metadata_path: str, sample_id: str = "NA", barcode: str = ""):
         """
         upload sample using metadir and fastq path"""
+        pass
+
+    @abstractmethod
+    def update_sample_status_remote(self, sample_id: str):
+        """
+        update sample status"""
         pass
 
     @abstractmethod
@@ -328,7 +343,7 @@ class InsafluUpload(ABC):
         return False
 
     @abstractmethod
-    def update_log(self, sample_id: str, file_path: str, remote_path: str, status: int):
+    def update_log(self, sample_id: str, barcode: str, file_path: str, remote_path: str, status: int):
         """
         update log"""
         pass
@@ -385,6 +400,12 @@ class InsafluUpload(ABC):
     def launch_televir_project(self, sample_name: str, project_name: Optional[str] = None):
         """
         launch televir project"""
+        pass
+
+    @abstractmethod
+    def deploy_televir_sample(self, sample_id: str, sample_name: str, file_path: str, project_name: Optional[str] = None):
+        """
+        deploy televir sample"""
         pass
 
     @abstractmethod
@@ -464,14 +485,25 @@ class InsafluUploadRemote(InsafluUpload):
 
         self.conn.test_connection()
 
-    def update_log(self, sample_id: str, file_path: str, remote_path: str, status: int = UploadLog.STATUS_UPLOADED):
+    def update_log(self, sample_id: str, barcode: str, file_path: str, remote_path: str, status: int = UploadLog.STATUS_UPLOADED):
         """
         update upload log"""
 
         self.logger.update_log(
             sample_id=sample_id,
+            barcode=barcode,
             file_path=file_path,
             remote_path=remote_path,
+            status=status
+        )
+
+    def update_file_status(self, file_path: str, status: int):
+
+        self.logger.update_log(
+            sample_id="NA",
+            barcode="NA",
+            file_path=file_path,
+            remote_path="NA",
             status=status
         )
 
@@ -488,11 +520,10 @@ class InsafluUploadRemote(InsafluUpload):
 
         return self.conn.check_file_exists(file_path)
 
-    def upload_file(self, file_path: str, remote_path: str, file_id="NA", tag: Optional[str] = None):
+    def upload_file(self, file_path: str, remote_path: str, sample_id="NA", barcode="", tag: Optional[str] = None):
         """
         upload file to remote server"""
 
-        file_name = os.path.basename(file_path)
         status = self.logger.STATUS_MISSING
         if self.conn.check_file_exists(remote_path):
             status = self.logger.STATUS_UPLOADED
@@ -513,7 +544,8 @@ class InsafluUploadRemote(InsafluUpload):
                 status = self.logger.STATUS_ERROR
 
         self.logger.new_entry(
-            barcode=file_id,
+            sample_id=sample_id,
+            barcode=barcode,
             file_path=file_path,
             remote_path=remote_path,
             status=status,
@@ -532,7 +564,7 @@ class InsafluUploadRemote(InsafluUpload):
                 print("Error downloading file: ", remote_path)
                 print(error)
 
-    def upload_sample(self, fastq_path: str, metadata_path: str, sample_id: str = "NA"):
+    def upload_sample(self, fastq_path: str, metadata_path: str, sample_id: str = "NA", barcode: str = ""):
         """
         upload sample using metadir and fastq path"""
 
@@ -540,6 +572,7 @@ class InsafluUploadRemote(InsafluUpload):
             metadata_path,
             self.get_remote_path(metadata_path),
             sample_id,
+            barcode,
             self.TAG_METADATA
         )
 
@@ -547,8 +580,23 @@ class InsafluUploadRemote(InsafluUpload):
             fastq_path,
             self.get_remote_path(fastq_path),
             sample_id,
+            barcode,
             self.TAG_FASTQ
         )
+
+    def update_sample_status_remote(self, sample_name: str, file_path: str):
+        """
+        update sample status"""
+        status = self.get_sample_status(
+            sample_name,
+        )
+
+        self.update_file_status(
+            file_path,
+            status,
+        )
+
+        return status
 
     def submit_sample(self, metadata_path: str):
         """
@@ -564,14 +612,14 @@ class InsafluUploadRemote(InsafluUpload):
         )
 
         success = self.check_submission_success(output)
+
         if success:
             print(f"Metadata submission success: ", metadata_path)
+
         success_tag = InsafluSampleCodes.STATUS_UPLOADED if success else InsafluSampleCodes.STATUS_SUBMISSION_ERROR
 
-        self.update_log(
-            sample_id="NA",
+        self.update_file_status(
             file_path=metadata_path,
-            remote_path=remote_metadata_path,
             status=success_tag
         )
 
@@ -619,6 +667,43 @@ class InsafluUploadRemote(InsafluUpload):
         )
 
         return self.translate_televir_submission_output(submit_status)
+
+    def get_sample_df(self, sample_id: str):
+        """
+        get sample df"""
+
+        sample_df = self.logger.get_sample_df(sample_id)
+
+        return sample_df
+
+    def rm_sample_files_remote(self, sample_id: str):
+
+        sample_df = self.get_sample_df(sample_id)
+
+        for file in sample_df.remote_path.values:
+            self.clean_upload(
+                file,
+            )
+
+    def deploy_televir_sample(self, sample_id: str, sample_name: str, file_path: str, project_name: Optional[str] = None):
+        """
+        deploy televir sample"""
+        submit_status = self.launch_televir_project(
+            sample_name, project_name
+        )
+
+        if submit_status == InsafluSampleCodes.STATUS_SUBMITTED:
+
+            self.rm_sample_files_remote(
+                sample_id,
+            )
+
+            self.update_file_status(
+                file_path,
+                submit_status,
+            )
+
+        return submit_status
 
     def get_project_status(self, project_name: str):
 
