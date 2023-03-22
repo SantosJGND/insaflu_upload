@@ -117,15 +117,26 @@ class InfluDirectoryProcessing(DirectoryProcessing):
             insaflu_metadata_file,
         )
 
-    def televir_process_file(self, fastq_file):
-
-        merged_file = self.get_merged_file_name(fastq_file, self.fastq_dir)
+    def televir_process_file(self, fastq_file, merged_file):
+        """
+        process file for televir, upload and submit"""
 
         new_entry = self.write_metadata(
             fastq_file, self.fastq_dir, merged_file)
 
         self.upload_sample(new_entry)
         self.submit_sample(new_entry)
+
+    def process_file(self, fastq_file):
+        """
+        process file, merge and update metadata"""
+
+        merged_file = self.create_merged_file(fastq_file, self.fastq_dir)
+
+        self.update_processed(fastq_file, self.fastq_dir,
+                              merged_file)
+
+        return merged_file
 
     def process_folder(self):
         """
@@ -136,11 +147,11 @@ class InfluDirectoryProcessing(DirectoryProcessing):
         files_to_process = self.get_files()
 
         for ix, fastq_file in enumerate(files_to_process):
-            self.process_file(fastq_file)
+            merged_file = self.process_file(fastq_file)
 
             if ix == len(files_to_process) - 1:
                 self.televir_process_file(
-                    fastq_file
+                    fastq_file, merged_file
                 )
 
 
@@ -185,39 +196,31 @@ class InsafluPreMain(PreMain):
             self.run_metadata
         )
 
-    def logger_iterate(self, iterator):
-        """
-        iterate over iterator and log
-        """
-        for item in iterator:
-            self.logger.info("processing %s", item)
-            yield item
-
     def process_samples(self):
         """
         process samples
         """
 
-        combined = self.uploader.logger.get_log().reset_index(drop=True)
+        # combined = self.uploader.logger.get_log().reset_index(drop=True)
+        # for sample_id, sample_df in combined.groupby("sample_id"):
 
-        for sample_id, sample_df in combined.groupby("sample_id"):
+        samples_list = self.uploader.logger.generate_samples_list()
 
-            file_path = sample_df[sample_df.tag ==
-                                  "fastq"]["file_path"].values[0]
+        for sample in samples_list:
+            project_name = sample.sample_id
 
-            file_name, _ = self.processed.get_run_info(file_path)
-            project_name = sample_id
+            file_name, _ = self.processed.get_run_info(sample.file_path)
 
             status = self.uploader.update_sample_status_remote(
-                file_name, file_path)
+                file_name, sample.file_path)
 
             if status == InsafluSampleCodes.STATUS_UPLOADED:
 
                 ###
                 status = self.uploader.deploy_televir_sample(
-                    sample_id,
+                    sample.sample_id,
                     file_name,
-                    file_path,
+                    sample.file_path,
                     project_name,
                 )
 
@@ -233,38 +236,6 @@ class InsafluPreMain(PreMain):
                         os.path.basename(project_file),
                     )
                 )
-
-    def combined_processed_uploadlog(self):
-        """
-        combine processed and upload log
-        """
-
-        logs = self.run_metadata.uploader.logger.get_log().reset_index(drop=True)
-        print("#######3")
-        print(logs)
-
-        # get tag from logs into processed
-        processed_tag = self.processed.processed.reset_index(drop=True)
-        print(processed_tag)
-
-        # get tag by mapping file_path to logs
-        processed_tag["tag"] = processed_tag["merged"].map(
-            logs.set_index("file_path")["tag"]
-        )
-
-        # get status by mapping file_path to logs
-        processed_tag["status"] = processed_tag["merged"].map(
-            logs.set_index("file_path")["status"]
-        )
-
-        combined = (self.processed.processed.merge(
-            logs, left_on="merged", right_on="sample_id", how="outer")
-            .rename(columns={"barcode_x": "barcode"})
-            .dropna(subset=["barcode"]))
-
-        print(combined)
-
-        return combined
 
     def run(self):
         super().run()

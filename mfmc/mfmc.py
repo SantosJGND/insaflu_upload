@@ -146,6 +146,7 @@ class PreMain:
         try:
             while True:
                 self.run()
+                print("Sleeping for: ", self.real_sleep, " seconds")
                 time.sleep(self.real_sleep)
 
         except KeyboardInterrupt:

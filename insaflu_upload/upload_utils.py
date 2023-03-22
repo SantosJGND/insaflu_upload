@@ -2,7 +2,8 @@ import configparser
 import os
 import sys
 from abc import ABC, abstractmethod
-from typing import Optional
+from dataclasses import dataclass
+from typing import List, Optional
 
 import pandas as pd
 import paramiko
@@ -175,6 +176,38 @@ class InsafluSampleCodes:
     STATUS_ERROR = 7
 
 
+@dataclass
+class InsafluSample:
+    sample_id: str
+    barcode: str
+    file_path: str
+    remote_path: str
+    status: int
+
+    def __post_init__(self):
+        self.sample_id = self.sample_id.strip()
+        self.barcode = self.barcode.strip()
+        self.file_path = self.file_path.strip()
+        self.remote_path = self.remote_path.strip()
+        self.status = int(self.status)
+
+    def __str__(self):
+        return f"{self.sample_id},{self.barcode},{self.file_path},{self.remote_path},{self.status}"
+
+    def __repr__(self):
+        return f"{self.sample_id},{self.barcode},{self.file_path},{self.remote_path},{self.status}"
+
+    def __eq__(self, other):
+        return self.sample_id == other.sample_id and \
+            self.barcode == other.barcode and \
+            self.file_path == other.file_path and \
+            self.remote_path == other.remote_path and \
+            self.status == other.status
+
+    def __hash__(self):
+        return hash((self.sample_id, self.barcode, self.file_path, self.remote_path, self.status))
+
+
 class UploadLog:
 
     STATUS_MISSING = InsafluSampleCodes.STATUS_MISSING
@@ -204,6 +237,30 @@ class UploadLog:
                 "status"
             ]
         )
+
+    def generate_InsafluSample(self, row: pd.Series) -> InsafluSample:
+        """
+        generate InsafluSample"""
+
+        return InsafluSample(
+            sample_id=row["sample_id"],
+            barcode=row["barcode"],
+            file_path=row["file_path"],
+            remote_path=row["remote_path"],
+            status=row["status"]
+        )
+
+    def get_sample(self, sample_id: str) -> InsafluSample:
+        """
+        get sample"""
+
+        return self.generate_InsafluSample(self.log[(self.log["sample_id"] == sample_id) & (self.log["tag"] == "fastq")].iloc[0])
+
+    def generate_samples_list(self) -> List[InsafluSample]:
+        """
+        generate samples list"""
+
+        return [self.get_sample(sample_id) for sample_id in self.log["sample_id"].unique()]
 
     def get_sample_df(self, sample_id: str) -> pd.DataFrame:
         """
@@ -318,7 +375,7 @@ class InsafluUpload(ABC):
         pass
 
     @abstractmethod
-    def update_sample_status_remote(self, sample_id: str):
+    def update_sample_status_remote(self,  sample_name: str, file_path: str):
         """
         update sample status"""
         pass
