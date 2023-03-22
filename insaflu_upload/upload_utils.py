@@ -784,11 +784,17 @@ class InsafluUploadRemote(InsafluUpload):
 
         project_file = self.translate_project_results(submit_status)
 
-        local_file = os.path.join(
-            output_dir,
-            os.path.basename(project_file),
-        )
+        if project_file:
 
-        self.download_file(
-            project_file, local_file
-        )
+            project_file_ext = os.path.splitext(
+                os.path.basename(project_file))[1]
+
+            local_file = os.path.join(
+                output_dir,
+                f"{project_name}{project_file_ext}",
+
+            )
+
+            self.download_file(
+                project_file, local_file
+            )

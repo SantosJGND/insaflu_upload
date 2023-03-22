@@ -1,0 +1,2 @@
+sample_id	fastq	dir	barcode	time	merged
+barcode_01	test_data.fastq.gz	test_run/barcode_01	00	2.930743932723999	test_new/barcode_01/merged_files/barcode_01_00-00.fastq.gz
