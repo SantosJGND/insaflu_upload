@@ -1,3 +1,4 @@
+import configparser
 import os
 import sys
 from abc import ABC, abstractmethod
@@ -44,16 +45,54 @@ class Connector(ABC):
 
 class ConnectorParamiko(Connector):
 
-    def __init__(self, username: str, ip_address: str, rsa_key: str) -> None:
+    def __init__(self, config_file: str) -> None:
         super().__init__()
+        self.prep_input(config_file)
+        self.connect()
+
+    def input_config(self, config_file: str):
+
+        config = configparser.ConfigParser()
+        config.read(config_file)
+
+        username = config["Conn"].get("username", None)
+        ip_address = config["Conn"].get("ip_address", None)
+        rsa_key_path = config["Conn"].get("rsa_key", None)
+
+        if username is None or ip_address is None or rsa_key_path is None:
+            raise ValueError("Config file is missing values")
+
+        return username, ip_address, rsa_key_path
+
+    def input_user(self):
+        username = input("username: ")
+        ip_address = input("ip_address: ")
+        rsa_key_path = input("rsa_key (full path): ")
+
+        return username, ip_address, rsa_key_path
+
+    def prep_input(self, config_file: Optional[str] = None):
+        if config_file is None:
+            username, ip_address, rsa_key_path = self.input_user()
+        try:
+            username, ip_address, rsa_key_path = self.input_config(config_file)
+        except FileNotFoundError:
+            print("Config file not found, please input manually")
+            username, ip_address, rsa_key_path = self.input_user()
+
         self.username = username
         self.ip_address = ip_address
+        self.rsa_key_path = rsa_key_path
 
-        paramiko_rsa_key = paramiko.RSAKey.from_private_key_file(rsa_key)
+    def connect(self):
+
+        paramiko_rsa_key = paramiko.RSAKey.from_private_key_file(
+            self.rsa_key_path)
         self.rsa_key = paramiko_rsa_key
 
         self.conn = paramiko.SSHClient()
         self.conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self.test_connection()
 
     def __enter__(self):
 
@@ -68,9 +107,9 @@ class ConnectorParamiko(Connector):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.conn.close()
 
-    def test_connection(self):
+    def test_connection(self) -> None:
         """
-        test using paramiko using rsa key
+        test using paramiko using rsa key. If successful, close connection, else exit
         """
 
         try:
@@ -367,27 +406,20 @@ class InsafluUpload(ABC):
 
 class InsafluUploadRemote(InsafluUpload):
 
-    conn: Connector
+    # conn: Connector
     logger: UploadLog
     TAG_FASTQ = "fastq"
     TAG_METADATA = "metadata"
 
-    def __init__(self) -> None:
+    def __init__(self, connector: Connector) -> None:
         super().__init__()
         self.logger = UploadLog()
+        self.conn = connector
         self.prep_upload()
 
     def prep_upload(self):
-        # username = input("Enter username: ")
-        # ip_address = input("Enter ip address: ")
-        # rsa_key = input("Enter rsa key (full path): ")
-
-        username = "centos"
-        ip_address = "194.210.120.234"
-        rsa_key = "/home/bioinf/.ssh/id_rsa"
-
-        self.conn = ConnectorParamiko(username, ip_address, rsa_key)
-
+        """
+        prepare upload"""
         self.django_manager = os.path.join(
             self.app_dir,
             "manage.py"
@@ -397,7 +429,7 @@ class InsafluUploadRemote(InsafluUpload):
 
     def test_connection(self):
         """
-        test using paramiko using rsa key
+        test connection
         """
 
         self.conn.test_connection()
@@ -463,7 +495,12 @@ class InsafluUploadRemote(InsafluUpload):
         download file from remote server"""
 
         if self.conn.check_file_exists(remote_path):
-            self.conn.download_file(remote_path, local_path)
+            try:
+                self.conn.download_file(remote_path, local_path)
+                print("File downloaded: ", remote_path)
+            except Exception as error:
+                print("Error downloading file: ", remote_path)
+                print(error)
 
     def upload_sample(self, fastq_path: str, metadata_path: str, sample_id: str = "NA"):
         """

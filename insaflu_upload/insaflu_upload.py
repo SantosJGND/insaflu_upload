@@ -219,8 +219,6 @@ class InsafluPreMain(PreMain):
                     file_name,
                 )
 
-                print("project file", project_file)
-
                 uploader.download_file(
                     project_file, os.path.join(
                         self.run_metadata.metadata_dir,
