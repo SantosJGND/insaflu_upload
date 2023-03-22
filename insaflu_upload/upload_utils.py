@@ -355,6 +355,9 @@ class InsafluUpload(ABC):
         translate televir submission output"""
 
         if "submitted" in submission_output:
+            if "already" in submission_output:
+                return InsafluSampleCodes.STATUS_SUBMITTED
+
             return InsafluSampleCodes.STATUS_SUBMITTED
 
         return InsafluSampleCodes.STATUS_SUBMISSION_ERROR
@@ -534,6 +537,8 @@ class InsafluUploadRemote(InsafluUpload):
         )
 
         success = self.check_submission_success(output)
+        if success:
+            print(f"Metadata submission success: ", metadata_path)
         success_tag = InsafluSampleCodes.STATUS_UPLOADED if success else InsafluSampleCodes.STATUS_SUBMISSION_ERROR
 
         self.update_log(

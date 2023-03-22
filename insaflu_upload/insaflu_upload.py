@@ -172,59 +172,72 @@ class InsafluPreMain(PreMain):
         uploader = self.run_metadata.uploader
         logs = uploader.logger.get_log()
 
-        for barcode, barcode_df in logs.groupby("barcode"):
+        combined = self.combined_processed_uploadlog()
 
-            file_path = barcode_df[barcode_df.tag ==
-                                   "fastq"]["file_path"].values[0]
-            file_name = os.path.basename(file_path)
-            file_name, _ = self.processed.get_run_info(file_name)
-            status = uploader.get_sample_status(
-                file_name,
-            )
+        for dir, df_dir in combined.groupby("dir"):
+            self.logger.info("processing dir %s", dir)
 
-            self.logger.info("sample %s status %s", file_name, status)
+            for barcode, barcode_df in df_dir.groupby("barcode"):
 
-            uploader.update_log(
-                "NA",
-                file_path,
-                file_path,
-                status,
-            )
+                file_path = barcode_df[barcode_df.tag ==
+                                       "fastq"]["file_path"].values[0]
 
-            if status == InsafluSampleCodes.STATUS_UPLOADED:
+                file_name = os.path.basename(file_path)
+                file_name, _ = self.processed.get_run_info(file_name)
 
-                ###
-                submit_status = uploader.launch_televir_project(
+                project_name = file_name
+                if _ == "":
+                    project_name = file_name.split("_")[:-1]
+                    project_name = "_".join(project_name)
+
+                status = uploader.get_sample_status(
                     file_name,
                 )
 
-                # create method to remove files with specific barcode.
-                if submit_status == InsafluSampleCodes.STATUS_SUBMITTED:
-                    for file in barcode_df.remote_path.values:
-                        uploader.clean_upload(
-                            file,
+                self.logger.info("sample %s status %s", file_name, status)
+
+                uploader.update_log(
+                    "NA",
+                    file_path,
+                    file_path,
+                    status,
+                )
+
+                if status == InsafluSampleCodes.STATUS_UPLOADED:
+
+                    ###
+                    submit_status = uploader.launch_televir_project(
+                        file_name, project_name
+                    )
+
+                    # create method to remove files with specific barcode.
+                    if submit_status == InsafluSampleCodes.STATUS_SUBMITTED:
+                        print("Submitted sample: ", file_name)
+                        for file in barcode_df.remote_path.values:
+                            uploader.clean_upload(
+                                file,
+                            )
+
+                        uploader.update_log(
+                            "NA",
+                            file_path,
+                            file_path,
+                            submit_status,
                         )
+                        status = submit_status
 
-                    uploader.update_log(
-                        "NA",
-                        file_path,
-                        file_path,
-                        submit_status,
+                if status == InsafluSampleCodes.STATUS_SUBMITTED:
+
+                    project_file = uploader.get_project_results(
+                        project_name,
                     )
-                    status = submit_status
 
-            if status == InsafluSampleCodes.STATUS_SUBMITTED:
-
-                project_file = uploader.get_project_results(
-                    file_name,
-                )
-
-                uploader.download_file(
-                    project_file, os.path.join(
-                        self.run_metadata.metadata_dir,
-                        os.path.basename(project_file),
+                    uploader.download_file(
+                        project_file, os.path.join(
+                            self.run_metadata.metadata_dir,
+                            os.path.basename(project_file),
+                        )
                     )
-                )
 
     def combined_processed_uploadlog(self):
         """
@@ -232,10 +245,12 @@ class InsafluPreMain(PreMain):
         """
 
         logs = self.run_metadata.uploader.logger.get_log()
-        combined = self.processed.processed.merge(
-            logs, on="barcode", how="outer")
+        combined = (self.processed.processed.merge(
+            logs, left_on="merged", right_on="file_path", how="outer")
+            .rename(columns={"barcode_x": "barcode"})
+            .dropna(subset=["barcode"]))
 
-        print(combined)
+        return combined
 
     def run(self):
         super().run()
