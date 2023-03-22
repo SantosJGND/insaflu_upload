@@ -55,9 +55,9 @@ class ConnectorParamiko(Connector):
         config = configparser.ConfigParser()
         config.read(config_file)
 
-        username = config["Conn"].get("username", None)
-        ip_address = config["Conn"].get("ip_address", None)
-        rsa_key_path = config["Conn"].get("rsa_key", None)
+        username = config["SSH"].get("username", None)
+        ip_address = config["SSH"].get("ip_address", None)
+        rsa_key_path = config["SSH"].get("rsa_key", None)
 
         if username is None or ip_address is None or rsa_key_path is None:
             raise ValueError("Config file is missing values")
@@ -265,7 +265,6 @@ class InsafluUpload(ABC):
     logger: UploadLog
     remote_dir: str = "/usr/local/web_site/INSaFLU/media/uploads/"
     app_dir = "/usr/local/web_site/INSaFLU/"
-    televir_user = "televir"
 
     @abstractmethod
     def prep_upload(self):
@@ -414,11 +413,39 @@ class InsafluUploadRemote(InsafluUpload):
     TAG_FASTQ = "fastq"
     TAG_METADATA = "metadata"
 
-    def __init__(self, connector: Connector) -> None:
+    def __init__(self, connector: Connector, config_file: str) -> None:
         super().__init__()
         self.logger = UploadLog()
         self.conn = connector
         self.prep_upload()
+        self.prep_user(config_file=config_file)
+
+    def input_config(self, config_file: str):
+
+        config = configparser.ConfigParser()
+        config.read(config_file)
+
+        username = config["INSAFLU"].get("username", None)
+
+        if username is None:
+            raise ValueError("username not found in config file")
+
+        return username
+
+    def input_user(self):
+        username = input("INSaFLU username: ")
+
+        return username
+
+    def prep_user(self, config_file: Optional[str] = None):
+
+        if config_file is None:
+            self.televir_user = self.input_user()
+        else:
+            try:
+                self.televir_user = self.input_config(config_file=config_file)
+            except ValueError:
+                self.televir_user = self.input_user()
 
     def prep_upload(self):
         """

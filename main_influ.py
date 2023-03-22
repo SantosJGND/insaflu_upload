@@ -34,7 +34,7 @@ def main():
 
     connector = ConnectorParamiko(args.config)
 
-    insaflu_upload = InsafluUploadRemote(connector)
+    insaflu_upload = InsafluUploadRemote(connector, args.config)
 
     run_metadata = InfluConfig(
         args.out_dir,
