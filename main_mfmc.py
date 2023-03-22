@@ -13,6 +13,9 @@ def get_arguments():
     parser.add_argument("-s", "--sleep", help="Sleep time",
                         required=True, type=int)
 
+    parser.add_argument("-n", "--tag", help="name tag, if given, will be added to the output file names",
+                        required=False, type=str, default="")
+
     return parser.parse_args()
 
 
@@ -22,6 +25,7 @@ def main():
 
     run_metadata = RunConfig(
         args.out_dir,
+        args.tag
 
     )
 

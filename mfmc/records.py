@@ -1,8 +1,17 @@
 
 
 import os
+from dataclasses import dataclass
+from typing import Optional
 
 import pandas as pd
+
+
+@dataclass
+class RunConfig:
+
+    output_dir: str
+    name_tag: str
 
 
 class Processed:
@@ -41,6 +50,10 @@ class Processed:
         except FileNotFoundError:
             processed = self.processed_template.copy()
 
+        processed["barcode"] = processed.barcode.apply(
+            lambda x: str(x).zfill(2) if not pd.isna(x) else x
+        )
+
         return processed
 
     def file_exists(self, fastq_file, fastq_dir):
@@ -67,6 +80,10 @@ class Processed:
 
         if run_num == os.path.basename(filename):
             run_num = ""
+
+        if not run_num.isnumeric():
+            run_num = ""
+
         return run_num
 
     def get_run_info(self, filename: str):

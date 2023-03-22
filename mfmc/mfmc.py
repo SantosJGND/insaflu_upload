@@ -8,11 +8,10 @@ Created on Fri Feb 17 14:20:20 2023
 
 import os
 import time
-from dataclasses import dataclass
 
 import pandas as pd
 
-from mfmc.records import Processed
+from mfmc.records import Processed, RunConfig
 from mfmc.utilities import Utils
 
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -34,12 +33,6 @@ ARGUMENT_OPTIONS = ["--in_dir", "--out_dir", "--tsv_t_n", "--tsv_t_dir"]
 
 
 ####################         5 - Main functions          #####################
-
-
-@dataclass
-class RunConfig:
-
-    output_dir: str
 
 
 class PreMain:
@@ -141,10 +134,6 @@ class PreMain:
          .assess_depth_fastqs()
          .assess_proceed()
          .process_fastq_dict())
-
-        # self.assess_depth_fastqs()
-        # self.assess_proceed()
-        # self.process_fastq_dict()
 
         self.processed.export(
             self.run_metadata.output_dir
@@ -257,11 +246,7 @@ class DirectoryProcessing():
         for fastq_file in self.get_files():
             self.process_file(fastq_file)
 
-    def prep_merged_file(self, fastq_file, fastq_dir):
-        """
-        get merged name
-        """
-        utils = Utils()
+    def get_merged_file_name(self, fastq_file, fastq_dir):
 
         run_name, run_num = self.processed.get_run_barcode(
             fastq_file, fastq_dir)
@@ -271,10 +256,22 @@ class DirectoryProcessing():
         if first_run_barcode == "":
             first_run_barcode = run_num
 
-        merged_name = str(first_run_barcode)+"-"+str(run_num)+".fastq.gz"
+        if self.run_metadata.name_tag:
+            merged_name_prefix = f"{merged_name_prefix}_{self.run_metadata.name_tag}"
+
         merged_name = f"{merged_name_prefix}_{first_run_barcode}-{run_num}.fastq.gz"
 
         merged_name = os.path.join(self.merged_gz_dir, merged_name)
+
+        return merged_name
+
+    def prep_merged_file(self, fastq_file, fastq_dir):
+        """
+        get merged name
+        """
+        utils = Utils()
+
+        merged_name = self.get_merged_file_name(fastq_file, fastq_dir)
 
         open(merged_name, 'a').close()
 

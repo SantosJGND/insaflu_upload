@@ -1,0 +1,72 @@
+
+# Test with INCD
+
+# copy files to required folder
+scp file.fastq.gz centos@194.210.120.234:/usr/local/web_site/INSaFLU/media/uploads/
+scp metadata.tsv centos@194.210.120.234:/usr/local/web_site/INSaFLU/media/uploads/
+
+
+#########################################################################################
+# run upload script
+ssh centos@194.210.120.234 'cd /usr/local/web_site/INSaFLU/; python3 manage.py upload_samples --metadata_file metadata.tsv --user_login daniel.sobral'
+
+//////// metadata file not found
+Starting to upload: test_influ/barcode_01/metadata_dir/barcode_01_00-00_metadata.tsv
+Warning: fastq files bigger than 629916160 will be randomly reduced to this size
+Upload to user: televir
+Metadata file /usr/local/web_site/INSaFLU/media/uploads/test_influ/barcode_01/metadata_dir/barcode_01_00-00_metadata.tsv could not be found
+
+//////// fastq file inside metadata not found
+Starting to upload: /usr/local/web_site/INSaFLU/media/uploads/barcode_01_00-00_metadata.tsv
+Warning: fastq files bigger than 629916160 will be randomly reduced to this size
+Upload to user: televir
+Fastq file /usr/local/web_site/INSaFLU/media/uploads/test_influ/barcode_01/merged_files/barcode_01_00-00.fastq.gz could not be found
+sample test_data file(s) to be processed: test_influ/barcode_01/merged_files/barcode_01_00-00.fastq.gz  
+Fastq files are missing, cannot continue
+
+//////// successful deployment
+Starting to upload: /usr/local/web_site/INSaFLU/media/uploads/barcode_01_00-00_metadata.tsv
+Warning: fastq files bigger than 629916160 will be randomly reduced to this size
+Upload to user: televir
+sample test_data file(s) to be processed: barcode_01_00-00.fastq.gz  
+ 1 samples are going to be processed
+uploads/multiple_samples/userId_16/csv_sample_file/61477880/barcode_01_00-00_metadata.tsv file was processed
+Fastq file to upload: /usr/local/web_site/INSaFLU/media/uploads/barcode_01_00-00.fastq.gz
+cmd: export SGE_ROOT=/opt/sge/; qsub /tmp/insaFlu/influ_path_20621_30915420/launch_job_insa.sh > /tmp/insaFlu/insa_flu_file_qsub_out_89003800_file.txt
+cmd: export SGE_ROOT=/opt/sge/; qsub /tmp/insaFlu/influ_path_20621_57539470/launch_job_insa.sh > /tmp/insaFlu/insa_flu_file_qsub_out_74860300_file.txt
+End
+//////// sample already in db
+Starting to upload: /usr/local/web_site/INSaFLU/media/uploads/barcode_01_00-00_metadata.tsv
+Warning: fastq files bigger than 629916160 will be randomly reduced to this size
+Upload to user: televir
+Errors found processing the metadata file /usr/local/web_site/INSaFLU/media/uploads/barcode_01_00-00_metadata.tsv
+Error - Sample name 'barcode_01_00-00' exists in database. Line: 2 Column: 1
+
+##########################################################################################
+# loop until Is Ready: true (ou outro erro)
+ssh centos@194.210.120.234 'cd /usr/local/web_site/INSaFLU/; python3 manage.py check_sample_status --name FAR59055_pass_barcode11_a330c0a6_0 --user_login daniel.sobral'
+
+//////// sample name has not been submitted.
+Error: Sample matching query does not exist..
+
+//////// Sample submitted but still processing.
+Is Ready: False
+
+//////// Sample submitted and processed.
+Is Ready: True
+
+############################################################################################
+#when sample is ok remove original files:
+ssh centos@194.210.120.234 'rm /usr/local/web_site/INSaFLU/media/uploads/file.fastq.gz; rm /usr/local/web_site/INSaFLU/media/uploads/metadata.tsv'
+
+
+-------------------------------
+
+# now launch televir project 
+ssh centos@194.210.120.234 'cd /usr/local/web_site/INSaFLU/; python3 manage.py create_televir_from_sample --sample_name FAR59055_pass_barcode11_a330c0a6_0 --user_login daniel.sobral'
+
+# finally, test until televir project is ready to get results...
+ssh centos@194.210.120.234 'cd /usr/local/web_site/INSaFLU/; python3 manage.py check_televir_results --project_name FAR59055_pass_barcode11_0 --user_login daniel.sobral'
+
+# Now get results and process them [get project id from previous command]
+ssh centos@194.210.120.234 'ls /usr/local/web_site/INSaFLU/static_all/televir_projects/150/'
