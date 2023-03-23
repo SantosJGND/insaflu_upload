@@ -5,8 +5,9 @@ Created on Fri Feb 17 14:20:20 2023
 @author: andre
 """
 
-
 import os
+import subprocess
+import sys
 import time
 
 import pandas as pd
@@ -198,6 +199,46 @@ class DirectoryProcessing():
             fastq_dir=fastq_dir
         )
 
+    @staticmethod
+    def check_file_open_linux(file_path):
+        """
+        check if file is open
+        """
+        command = f"lsof -t {file_path} | wc -l"
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+        output, error = process.communicate()
+
+        output = output.decode("utf-8").strip()
+
+        return int(output) > 1
+
+    def check_file_open(self, file_path):
+        """
+        check if file is open
+        """
+
+        if sys.platform == "linux":
+            return self.check_file_open_linux(file_path)
+
+        return True
+
+    def check_file_for_process(self, fastq_file, fastq_dir):
+        """
+        check if file is open
+        """
+
+        file_path = os.path.join(
+            fastq_dir,
+            fastq_file)
+
+        if not os.path.isfile(file_path):
+            return False
+
+        if self.match_to_processed(fastq_file, fastq_dir):
+            return False
+
+        return False if self.check_file_open(file_path) else True
+
     def get_files(self):
         """
         get folders and files
@@ -207,7 +248,7 @@ class DirectoryProcessing():
 
         folder_files = utils.search_folder_for_seq_files(self.fastq_dir)
         folder_files = [
-            x for x in folder_files if not self.match_to_processed(x, self.fastq_dir)]
+            x for x in folder_files if self.check_file_for_process(x, self.fastq_dir)]
 
         if folder_files == []:
             print("No new files in ", self.fastq_dir)

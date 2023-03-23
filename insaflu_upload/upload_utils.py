@@ -255,8 +255,6 @@ class UploadLog:
         """
         generate samples list"""
 
-        print(self.log)
-
         return [self.get_sample(sample_id) for sample_id in self.log["sample_id"].unique()]
 
     def get_sample_files(self, sample_id: str) -> List[str]:
