@@ -224,7 +224,8 @@ class UploadLog:
         "barcode",
         "file_path",
         "remote_path",
-        "status"
+        "status",
+        "tag",
     ]
 
     def __init__(self) -> None:
@@ -303,7 +304,7 @@ class UploadLog:
                         "file_path": [file_path],
                         "remote_path": [remote_path],
                         "status": [status],
-                        "tag": tag
+                        "tag": [tag]
                     }
                 )
             ]

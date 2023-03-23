@@ -16,7 +16,7 @@ def get_arguments():
                         help="TSV template name", default="templates_comb.tsv")
     parser.add_argument("-d", "--tsv_t_dir",
                         help="TSV template directory", required=True)
-    parser.add_argument("-s", "--sleep", help="Sleep time", default=5,
+    parser.add_argument("-s", "--sleep", help="Sleep time", default=60,
                         type=int)
 
     parser.add_argument("-n", "--tag", help="name tag, if given, will be added to the output file names",
