@@ -177,7 +177,7 @@ class InsafluSampleCodes:
 
 
 @dataclass
-class InsafluSample:
+class InsafluFile:
     sample_id: str
     barcode: str
     file_path: str
@@ -233,11 +233,11 @@ class UploadLog:
             columns=self.columns
         )
 
-    def generate_InsafluSample(self, row: pd.Series) -> InsafluSample:
+    def generate_InsafluFile(self, row: pd.Series) -> InsafluFile:
         """
         generate InsafluSample"""
 
-        return InsafluSample(
+        return InsafluFile(
             sample_id=row["sample_id"],
             barcode=row["barcode"],
             file_path=row["file_path"],
@@ -245,25 +245,29 @@ class UploadLog:
             status=row["status"]
         )
 
-    def get_sample(self, sample_id: str) -> InsafluSample:
+    def get_sample_files(self, sample_id: str) -> List[InsafluFile]:
         """
         get sample"""
 
-        return self.generate_InsafluSample(self.log[(self.log["sample_id"] == sample_id) & (self.log["tag"] == "fastq")].iloc[0])
+        return [
+            self.generate_InsafluFile(row) for _, row in self.log[(self.log["sample_id"] == sample_id) & (self.log["tag"] == "fastq")].iterrows()
+        ]
 
-    def generate_samples_list(self) -> List[InsafluSample]:
+    def generate_samples_list(self) -> List[InsafluFile]:
         """
         generate samples list"""
 
-        return [self.get_sample(sample_id) for sample_id in self.log["sample_id"].unique()]
+        return [
+            self.generate_InsafluFile(row) for _, row in self.log[(self.log["tag"] == "fastq")].iterrows()
+        ]
 
-    def get_sample_files(self, sample_id: str) -> List[str]:
+    def get_sample_remotepaths(self, sample_id: str) -> List[str]:
         """
         get sample files"""
 
-        samples = [self.generate_InsafluSample(
+        samples = [self.generate_InsafluFile(
             row) for _, row in self.log[self.log["sample_id"] == sample_id].iterrows()]
-        sample_files = [sample.file_path for sample in samples]
+        sample_files = [sample.remote_path for sample in samples]
 
         return sample_files
 
@@ -273,7 +277,7 @@ class UploadLog:
 
         return file_path in self.log["file_path"].values
 
-    def modify_entry(self, file_path: str, status: int) -> None:
+    def modify_entry_status(self, file_path: str, status: int) -> None:
         """
         modify entry"""
 
@@ -284,7 +288,7 @@ class UploadLog:
         update upload log"""
 
         if self.check_entry_exists(file_path):
-            self.modify_entry(file_path, status)
+            self.modify_entry_status(file_path, status)
         else:
             self.new_entry(sample_id, barcode, file_path, remote_path, status)
 
@@ -720,7 +724,7 @@ class InsafluUploadRemote(InsafluUpload):
 
     def rm_sample_files_remote(self, sample_id: str):
 
-        sample_files = self.logger.get_sample_files(sample_id)
+        sample_files = self.logger.get_sample_remotepaths(sample_id)
 
         for file in sample_files:
             self.clean_upload(

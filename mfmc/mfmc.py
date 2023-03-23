@@ -212,13 +212,24 @@ class DirectoryProcessing():
 
         return int(output) > 1
 
+    def check_file_open_windows(self, file_path):
+        """
+        check if file is open
+        """
+        return True
+
     def check_file_open(self, file_path):
         """
         check if file is open
         """
 
-        if sys.platform == "linux":
+        platform = sys.platform
+
+        if platform == "linux":
             return self.check_file_open_linux(file_path)
+
+        elif platform == "win32":
+            return self.check_file_open_windows(file_path)
 
         return True
 

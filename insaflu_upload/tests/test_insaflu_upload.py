@@ -13,7 +13,7 @@ from paramiko import SSHClient
 from insaflu_upload.insaflu_upload import (InfluDirectoryProcessing,
                                            InsafluPreMain)
 from insaflu_upload.records import InfluConfig, InfluProcessed, MetadataEntry
-from insaflu_upload.upload_utils import (ConnectorParamiko, InsafluSample,
+from insaflu_upload.upload_utils import (ConnectorParamiko, InsafluFile,
                                          InsafluSampleCodes,
                                          InsafluUploadRemote, UploadLog)
 
@@ -65,6 +65,65 @@ class TestUploadLog(unittest.TestCase):
 
         assert upload_log.log.equals(new_entry)
 
+    def test_modify_entry_status(self):
+        upload_log = UploadLog()
+
+        upload_log.new_entry(
+            "test",
+            "test",
+            "test",
+            "test",
+            0,
+            "test",)
+
+        upload_log.modify_entry_status("test", 2)
+
+        assert upload_log.log.loc[0, "status"] == 2
+
+    def test_update_log_existing(self):
+        upload_log = UploadLog()
+
+        upload_log.new_entry(
+            "test",
+            "test",
+            "test",
+            "test",
+            0,
+            "test",)
+
+        upload_log.update_log("test", "test", "test", "test", 2)
+
+        assert upload_log.log.loc[0, "status"] == 2
+
+    def test_check_entry_exists(self):
+
+        upload_log = UploadLog()
+
+        upload_log.new_entry(
+            "test",
+            "test",
+            "test",
+            "test",
+            0,
+            "test",)
+
+        assert upload_log.check_entry_exists("test") == True
+
+    def test_update_log_new(self):
+        upload_log = UploadLog()
+
+        upload_log.new_entry(
+            "test1",
+            "test1",
+            "test1",
+            "test1",
+            0,
+            "test1",)
+
+        upload_log.update_log("test", "test", "test", "test", 2)
+
+        assert upload_log.check_entry_exists("test") == True
+
     def test_get_log(self):
 
         upload_log = UploadLog()
@@ -85,22 +144,95 @@ class TestUploadLog(unittest.TestCase):
 
         assert upload_log.get_file_status("test") == "test"
 
+    def test_generate_InsafluSample(self):
+
+        upload_log = UploadLog()
+
+        upload_log.new_entry(
+            "test",
+            "test",
+            "test",
+            "test",
+            0,
+            "test",)
+
+        sample = upload_log.generate_InsafluFile(
+            upload_log.log.loc[0],
+        )
+
+        assert sample.sample_id == "test"
+        assert sample.barcode == "test"
+        assert sample.file_path == "test"
+        assert sample.remote_path == "test"
+        assert sample.status == 0
+
+    def test_get_sample(self):
+        upload_log = UploadLog()
+
+        upload_log.new_entry(
+            "test",
+            "test",
+            "test",
+            "test",
+            0,
+            "fastq",)
+
+        sample_files = upload_log.get_sample_files("test")
+        sample = sample_files[0]
+        assert sample.sample_id == "test"
+        assert sample.barcode == "test"
+        assert sample.file_path == "test"
+        assert sample.remote_path == "test"
+        assert sample.status == 0
+
+    def get_sample_remotepaths(self):
+        upload_log = UploadLog()
+
+        upload_log.new_entry(
+            "test",
+            "test",
+            "test",
+            "test",
+            0,
+            "fastq",)
+
+        sample_files = upload_log.get_sample_remotepaths("test")
+        sample = sample_files[0]
+        assert sample == "test"
+
+    def test_get_samples_list(self):
+        """
+        test get_samples_list"""
+        upload_log = UploadLog()
+
+        upload_log.new_entry(
+            "test",
+            "test",
+            "test",
+            "test",
+            0,
+            "fastq",)
+
+        sample_list = upload_log.generate_samples_list()
+
+        sample = sample_list[0]
+        assert sample.sample_id == "test"
+
 
 class ConnectorParamikoProxy(ConnectorParamiko):
 
     def connect(self):
         """
-        create local ssh mock server and
-        connect using paramiko"""
+        create local ssh mock server"""
         users = {
-            "sample-user": "/home/bioinf/.ssh/id_rsa",
+            "test-user": "/home/bioinf/.ssh/id_rsa",
         }
         self.server = mockssh.Server(users)
 
     def __enter__(self):
         self.server.__enter__()
         with self.server as s:
-            self.conn = s.client("sample-user")
+            self.conn = s.client("test-user")
             return self
 
     def __exit__(self, exc_type, exc_value, traceback):

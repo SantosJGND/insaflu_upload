@@ -203,6 +203,7 @@ class InsafluPreMain(PreMain):
         """
 
         samples_list = self.uploader.logger.generate_samples_list()
+        print(samples_list)
 
         for sample in samples_list:
             project_name = sample.sample_id
