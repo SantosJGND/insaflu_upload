@@ -220,7 +220,7 @@ class UploadLog:
     STATUS_ERROR = InsafluSampleCodes.STATUS_ERROR
 
     columns = [
-        "sample_id"
+        "sample_id",
         "barcode",
         "file_path",
         "remote_path",
@@ -229,13 +229,7 @@ class UploadLog:
 
     def __init__(self) -> None:
         self.log = pd.DataFrame(
-            columns=[
-                "sample_id",
-                "barcode",
-                "file_path",
-                "remote_path",
-                "status"
-            ]
+            columns=self.columns
         )
 
     def generate_InsafluSample(self, row: pd.Series) -> InsafluSample:
@@ -260,13 +254,19 @@ class UploadLog:
         """
         generate samples list"""
 
+        print(self.log)
+
         return [self.get_sample(sample_id) for sample_id in self.log["sample_id"].unique()]
 
-    def get_sample_df(self, sample_id: str) -> pd.DataFrame:
+    def get_sample_files(self, sample_id: str) -> List[str]:
         """
-        get sample df"""
+        get sample files"""
 
-        return self.log[self.log["sample_id"] == sample_id]
+        samples = [self.generate_InsafluSample(
+            row) for _, row in self.log[self.log["sample_id"] == sample_id].iterrows()]
+        sample_files = [sample.file_path for sample in samples]
+
+        return sample_files
 
     def check_entry_exists(self, file_path: str) -> bool:
         """
@@ -688,7 +688,7 @@ class InsafluUploadRemote(InsafluUpload):
         clean upload"""
 
         if self.check_file_exists(file_path):
-            self.conn.execute_command(
+            _ = self.conn.execute_command(
                 f"rm {file_path}"
             )
 
@@ -719,19 +719,11 @@ class InsafluUploadRemote(InsafluUpload):
 
         return self.translate_televir_submission_output(submit_status)
 
-    def get_sample_df(self, sample_id: str):
-        """
-        get sample df"""
-
-        sample_df = self.logger.get_sample_df(sample_id)
-
-        return sample_df
-
     def rm_sample_files_remote(self, sample_id: str):
 
-        sample_df = self.get_sample_df(sample_id)
+        sample_files = self.logger.get_sample_files(sample_id)
 
-        for file in sample_df.remote_path.values:
+        for file in sample_files:
             self.clean_upload(
                 file,
             )

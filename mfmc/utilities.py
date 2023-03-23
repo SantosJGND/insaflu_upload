@@ -13,9 +13,10 @@ class ConstantsSettings:
 
     def __init__(self):
 
-        self.possible_extentions = self.get_seq_extentions()
+        self.possible_extentions = self.get_possible_extentions()
 
-    def get_seq_extentions(self):
+    def get_possible_extentions(self):
+
         possible_extentions = list(it.product(
             self.seq_extentions, self.gzip_extentions))
         possible_extentions = ["".join(ext) for ext in possible_extentions]
@@ -119,7 +120,7 @@ class Utils:
             str                     list
         """
         constants_settings = ConstantsSettings()
-        possible_extentions = constants_settings.get_seq_extentions()
+        possible_extentions = constants_settings.possible_extentions
         cur_files = os.listdir(cwd)
 
         cur_files = [file for file in cur_files if self.check_extention(

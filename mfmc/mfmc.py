@@ -82,8 +82,6 @@ class PreMain:
         if utils.seqs_in_subdir(self.fastq_dir):
             fastq_depth = 1
 
-        fastq_depth - 1
-
         self.fastq_depth = fastq_depth
 
         return self
