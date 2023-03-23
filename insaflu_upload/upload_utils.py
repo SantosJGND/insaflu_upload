@@ -233,6 +233,19 @@ class UploadLog:
             columns=self.columns
         )
 
+    @property
+    def available_samples(self) -> List[str]:
+        """
+        get available samples"""
+
+        return self.log["sample_id"].unique().tolist()
+
+    def get_sample_status_set(self, sample_id: str) -> List[int]:
+        """
+        get sample status set"""
+
+        return self.log[self.log["sample_id"] == sample_id]["status"].unique().tolist()
+
     def generate_InsafluFile(self, row: pd.Series) -> InsafluFile:
         """
         generate InsafluSample"""
@@ -281,7 +294,7 @@ class UploadLog:
         """
         modify entry"""
 
-        self.log.loc[self.log["sample_id"] == file_path, "status"] = status
+        self.log.loc[self.log["file_path"] == file_path, "status"] = status
 
     def update_log(self, sample_id: str, barcode: str, file_path: str, remote_path: str, status: int):
         """
@@ -613,7 +626,7 @@ class InsafluUploadRemote(InsafluUpload):
         if self.conn.check_file_exists(remote_path):
             try:
                 self.conn.download_file(remote_path, local_path)
-                print("File downloaded: ", remote_path)
+                print("File downloaded: ", remote_path, " to ", local_path)
             except Exception as error:
                 print("Error downloading file: ", remote_path)
                 print(error)
@@ -644,6 +657,8 @@ class InsafluUploadRemote(InsafluUpload):
         status = self.get_sample_status(
             sample_name,
         )
+
+        print("updating status: ", sample_name, status, "")
 
         self.update_file_status(
             file_path,
@@ -743,6 +758,8 @@ class InsafluUploadRemote(InsafluUpload):
             self.rm_sample_files_remote(
                 sample_id,
             )
+
+            print("Sample submitted: ", sample_name, submit_status, file_path)
 
             self.update_file_status(
                 file_path,

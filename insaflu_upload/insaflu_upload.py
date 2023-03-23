@@ -203,7 +203,6 @@ class InsafluPreMain(PreMain):
         """
 
         samples_list = self.uploader.logger.generate_samples_list()
-        print(samples_list)
 
         for sample in samples_list:
             project_name = sample.sample_id
@@ -222,13 +221,22 @@ class InsafluPreMain(PreMain):
                     project_name,
                 )
 
-            if status == InsafluSampleCodes.STATUS_SUBMITTED:
+    def download_project_results(self):
+        """
+        download project results
+        """
+
+        for sample_id in self.uploader.logger.available_samples:
+            print(self.uploader.logger.get_sample_status_set(sample_id))
+
+            if InsafluSampleCodes.STATUS_SUBMITTED in self.uploader.logger.get_sample_status_set(sample_id):
 
                 self.uploader.get_project_results(
-                    project_name, self.run_metadata.metadata_dir
+                    sample_id, self.run_metadata.metadata_dir
                 )
 
     def run(self):
         super().run()
         self.process_samples()
+        self.download_project_results()
         self.export_global_metadata()
