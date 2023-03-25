@@ -1,17 +1,13 @@
 
 
 import os
+from abc import ABC, ABCMeta, abstractmethod
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional, Type
 
 import pandas as pd
 
-
-@dataclass
-class RunConfig:
-
-    output_dir: str
-    name_tag: str
+from mfmc.utilities import Utils
 
 
 class Processed:
@@ -218,3 +214,50 @@ class Processed:
                 "merged",
             ]
         )
+
+
+class ProcessAction(ABCMeta):
+    """
+    abstract class for processing action
+    """
+
+    @staticmethod
+    @abstractmethod
+    def process(fastq_file: str, processed: Processed):
+        """
+        process
+        """
+        pass
+
+
+class ProcessActionMergeWithLast(ProcessAction):
+    """
+    class to merge with last"""
+
+    @staticmethod
+    def process(fastq_file: str, processed: Processed):
+        """
+        process
+        """
+        last_run_file = processed.get_dir_merged_last(
+            os.path.dirname(fastq_file))
+
+        if last_run_file == "":
+            return
+
+        utils = Utils()
+
+        utils.append_file_to_gz(
+            last_run_file, fastq_file
+        )
+
+
+@dataclass
+class RunConfig:
+    """
+    class to hold run config"""
+
+    output_dir: str
+    name_tag: str
+    actions: Optional[List[Type[ProcessAction]]] = None
+    keep_name: bool = False

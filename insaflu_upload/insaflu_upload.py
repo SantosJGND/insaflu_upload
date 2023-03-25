@@ -1,14 +1,15 @@
 
 import logging
 import os
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 from insaflu_upload.records import InfluConfig, InfluProcessed, MetadataEntry
 from insaflu_upload.upload_utils import InsafluSampleCodes, InsafluUpload
-from mfmc.mfmc import DirectoryProcessing, PreMain
+from mfmc.mfmc import DirectoryProcessingSimple, PreMain
 
 
-class InfluDirectoryProcessing(DirectoryProcessing):
+class InfluDirectoryProcessing(DirectoryProcessingSimple):
     """
     TelevirDirectoryProcessing class
     replace directory gen to include metadata
@@ -127,17 +128,6 @@ class InfluDirectoryProcessing(DirectoryProcessing):
         self.upload_sample(new_entry)
         self.submit_sample(new_entry)
 
-    def process_file(self, fastq_file):
-        """
-        process file, merge and update metadata"""
-
-        merged_file = self.create_merged_file(fastq_file, self.fastq_dir)
-
-        self.update_processed(fastq_file, self.fastq_dir,
-                              merged_file)
-
-        return merged_file
-
     def process_folder(self):
         """
         process folder, merge and update metadata
@@ -150,7 +140,7 @@ class InfluDirectoryProcessing(DirectoryProcessing):
         for ix, fastq_file in enumerate(files_to_process):
             merged_file = self.process_file(fastq_file)
 
-            if ix == len(files_to_process) - 1:
+            if self.run_metadata.upload_strategy.is_to_upload(files_to_process, ix):
                 self.televir_process_file(
                     fastq_file, merged_file
                 )
@@ -163,6 +153,7 @@ class InsafluPreMain(PreMain):
 
     processed: InfluProcessed
     run_metadata: InfluConfig
+    projects_results: list = []
 
     def __init__(self, fastq_dir: str, run_metadata: InfluConfig, sleep_time: int):
         super().__init__(fastq_dir, run_metadata, sleep_time)
@@ -177,6 +168,14 @@ class InsafluPreMain(PreMain):
         self.logger.setLevel(logging.DEBUG)
 
         self.run_metadata = run_metadata
+
+    def update_projects(self, project_file: str):
+        """
+        update project added
+        """
+        if project_file not in self.projects_results:
+            if os.path.exists(project_file):
+                self.projects_results.append(project_file)
 
     def get_directory_processing(self, fastq_dir: str):
 
@@ -202,22 +201,22 @@ class InsafluPreMain(PreMain):
         process samples
         """
 
-        samples_list = self.uploader.logger.generate_samples_list()
+        fastq_list = self.uploader.logger.generate_fastq_list()
 
-        for sample in samples_list:
-            project_name = sample.sample_id
+        for fastq in fastq_list:
+            project_name = fastq.sample_id
 
-            file_name, _ = self.processed.get_run_info(sample.file_path)
+            file_name, _ = self.processed.get_run_info(fastq.file_path)
 
             status = self.uploader.update_sample_status_remote(
-                file_name, sample.file_path)
+                file_name, fastq.file_path)
 
             if status == InsafluSampleCodes.STATUS_UPLOADED:
 
                 status = self.uploader.deploy_televir_sample(
-                    sample.sample_id,
+                    fastq.sample_id,
                     file_name,
-                    sample.file_path,
+                    fastq.file_path,
                     project_name,
                 )
 
@@ -227,13 +226,19 @@ class InsafluPreMain(PreMain):
         """
 
         for sample_id in self.uploader.logger.available_samples:
-            print(self.uploader.logger.get_sample_status_set(sample_id))
 
             if InsafluSampleCodes.STATUS_SUBMITTED in self.uploader.logger.get_sample_status_set(sample_id):
 
-                self.uploader.get_project_results(
-                    sample_id, self.run_metadata.metadata_dir
+                project_file = os.path.join(
+                    self.run_metadata.metadata_dir,
+                    sample_id + ".tsv"
                 )
+
+                self.uploader.get_project_results(
+                    sample_id, project_file
+                )
+
+                self.update_projects(sample_id)
 
     def run(self):
         super().run()

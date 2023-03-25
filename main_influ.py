@@ -2,7 +2,9 @@
 import argparse
 
 from insaflu_upload.insaflu_upload import InfluConfig, InsafluPreMain
+from insaflu_upload.records import UploadAll, UploadLast
 from insaflu_upload.upload_utils import ConnectorParamiko, InsafluUploadRemote
+from mfmc.records import ProcessActionMergeWithLast
 
 
 def get_arguments():
@@ -25,6 +27,16 @@ def get_arguments():
     parser.add_argument("--config", help="config file",
                         required=False, type=str, default="config.ini")
 
+    parser.add_argument("--merge", help="merge files", action="store_true")
+
+    parser.add_argument('--upload',
+                        default='last',
+                        choices=['last', 'all'],
+                        help='file upload stategy (default: all)',)
+
+    parser.add_argument(
+        "--keep_names", help="keep original file names", action="store_true")
+
     return parser.parse_args()
 
 
@@ -36,12 +48,26 @@ def main():
 
     insaflu_upload = InsafluUploadRemote(connector, args.config)
 
+    # determine upload strategy
+    if args.upload == 'last':
+        upload_strategy = UploadLast
+    else:
+        upload_strategy = UploadAll
+
+    # determine actions
+    actions = []
+    if args.merge:
+        actions.append(ProcessActionMergeWithLast)
+
     run_metadata = InfluConfig(
-        args.out_dir,
-        args.tag,
-        insaflu_upload,
-        args.tsv_t_n,
-        args.tsv_t_dir,
+        output_dir=args.out_dir,
+        name_tag=args.tag,
+        uploader=insaflu_upload,
+        upload_strategy=upload_strategy,
+        actions=actions,
+        tsv_temp_name=args.tsv_t_n,
+        metadata_dir=args.tsv_t_dir,
+        keep_name=args.keep_names
     )
 
     compressor = InsafluPreMain(

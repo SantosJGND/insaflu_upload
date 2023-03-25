@@ -9,6 +9,8 @@ import os
 import subprocess
 import sys
 import time
+from abc import ABC, abstractmethod
+from typing import List, Tuple
 
 import pandas as pd
 
@@ -110,7 +112,7 @@ class PreMain:
             return utils.get_subdirectories(self.fastq_dir)
 
     def get_directory_processing(self, fastq_dir: str):
-        return DirectoryProcessing(fastq_dir, self.run_metadata, self.processed, self.start_time)
+        return DirectoryProcessingSimple(fastq_dir, self.run_metadata, self.processed, self.start_time)
 
     def process_fastq_dict(self):
         """
@@ -268,6 +270,16 @@ class DirectoryProcessing():
 
         return folder_files
 
+    def append_to_file(self, fastq_file, destination_file):
+        """
+        append to file
+        """
+        utils = Utils()
+
+        utils.append_file_to_gz(
+            fastq_file, destination_file
+        )
+
     def create_merged_file(self, fastq_file, fastq_dir):
 
         utils = Utils()
@@ -280,27 +292,11 @@ class DirectoryProcessing():
 
         return merged_file
 
-    def process_file(self, fastq_file):
-
-        merged_file = self.create_merged_file(fastq_file, self.fastq_dir)
-
-        self.update_processed(fastq_file, self.fastq_dir,
-                              merged_file)
-
-    def process_folder(self):
-        """
-        process folder
-        """
-
-        self.prep_output_dirs()
-
-        for fastq_file in self.get_files():
-            self.process_file(fastq_file)
-
     def get_merged_file_name(self, fastq_file, fastq_dir):
 
         _, run_num = self.processed.get_run_barcode(
             fastq_file, fastq_dir)
+
         merged_name_prefix = os.path.basename(os.path.dirname(fastq_file))
 
         first_run_barcode = self.processed.get_dir_barcode_first(fastq_dir)
@@ -333,6 +329,19 @@ class DirectoryProcessing():
 
         return merged_name
 
+    def merge_with_last(self, fastq_file: str):
+        """
+        merge with last
+        """
+
+        utils = Utils()
+
+        last_run_file = self.processed.get_dir_merged_last(self.fastq_dir)
+
+        utils.append_file_to_gz(
+            last_run_file, fastq_file
+        )
+
     def update_processed(self, fastq_file, fastq_dir, merged_file):
         """
         update processed
@@ -361,6 +370,81 @@ class DirectoryProcessing():
                 columns=["sample name", "fastq1", "time elapsed"])
 
         return template_tsv
+
+    def set_destination_filepath(self, fastq_file, fastq_dir):
+        """
+        set destination filepath"""
+
+        print("set_destination_filepath", fastq_file, fastq_dir)
+
+        if self.run_metadata.keep_name:
+            return os.path.join(
+                self.merged_gz_dir,
+                os.path.basename(fastq_file)
+            )
+
+        else:
+            return self.get_merged_file_name(fastq_file, fastq_dir)
+
+    def process_file(self, fastq_file):
+
+        merged_file = self.create_merged_file(fastq_file, self.fastq_dir)
+
+        self.update_processed(fastq_file, self.fastq_dir,
+                              merged_file)
+
+    def process_folder(self):
+        """
+        process folder
+        """
+
+        self.prep_output_dirs()
+
+        for fastq_file in self.get_files():
+            self.process_file(fastq_file)
+
+
+class DirectoryProcessingSimple(DirectoryProcessing):
+    """
+    class to process a directory
+    copies all files to a single directory. checks if already processed.
+    creates directory specific output subdirectory in output directory.
+    """
+
+    merged_dir_name = "merged_files"
+    outfiles_dir_name = "out_files"
+
+    def __init__(self, fastq_dir: str, run_metadata: RunConfig, processed: Processed, start_time: float):
+        super().__init__(fastq_dir, run_metadata, processed, start_time)
+
+    def process_file(self, fastq_file: str):
+
+        destination_file = fastq_file
+
+        if self.run_metadata.actions:
+            destination_file = self.set_destination_filepath(
+                fastq_file, self.fastq_dir)
+
+            self.append_to_file(fastq_file, destination_file)
+
+            for process_action in self.run_metadata.actions:
+
+                process_action.process(destination_file, self.processed)
+
+        self.update_processed(fastq_file, self.fastq_dir,
+                              destination_file)
+
+        return destination_file
+
+    def process_folder(self):
+        """
+        process folder
+        """
+
+        self.prep_output_dirs()
+
+        for fastq_file in self.get_files():
+            destination_file = self.process_file(fastq_file)
 
 
 ############################ SYSTEM STUFF ##########################

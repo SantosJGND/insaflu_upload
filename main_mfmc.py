@@ -1,6 +1,7 @@
 import argparse
 
-from mfmc.mfmc import PreMain, RunConfig
+from mfmc.mfmc import PreMain
+from mfmc.records import ProcessActionMergeWithLast, RunConfig
 
 
 def get_arguments():
@@ -16,6 +17,9 @@ def get_arguments():
     parser.add_argument("-n", "--tag", help="name tag, if given, will be added to the output file names",
                         required=False, type=str, default="")
 
+    parser.add_argument(
+        "--keep_names", help="keep original file names", action="store_true")
+
     return parser.parse_args()
 
 
@@ -25,8 +29,9 @@ def main():
 
     run_metadata = RunConfig(
         args.out_dir,
-        args.tag
-
+        args.tag,
+        actions=[ProcessActionMergeWithLast]
+        keep_name=args.keep_names
     )
 
     compressor = PreMain(

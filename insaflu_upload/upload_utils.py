@@ -97,11 +97,18 @@ class ConnectorParamiko(Connector):
 
     def __enter__(self):
 
-        self.conn.connect(
-            hostname=f"{self.ip_address}",
-            username=f"{self.username}",
-            pkey=self.rsa_key
-        )
+        try:
+
+            self.conn.connect(
+                hostname=f"{self.ip_address}",
+                username=f"{self.username}",
+                pkey=self.rsa_key
+            )
+
+        except paramiko.ssh_exception.SSHException as error:
+            print("SSH connection error")
+            # print(error)
+            sys.exit(1)
 
         return self
 
@@ -266,7 +273,7 @@ class UploadLog:
             self.generate_InsafluFile(row) for _, row in self.log[(self.log["sample_id"] == sample_id) & (self.log["tag"] == "fastq")].iterrows()
         ]
 
-    def generate_samples_list(self) -> List[InsafluFile]:
+    def generate_fastq_list(self) -> List[InsafluFile]:
         """
         generate samples list"""
 
@@ -658,8 +665,6 @@ class InsafluUploadRemote(InsafluUpload):
             sample_name,
         )
 
-        print("updating status: ", sample_name, status, "")
-
         self.update_file_status(
             file_path,
             status,
@@ -759,8 +764,6 @@ class InsafluUploadRemote(InsafluUpload):
                 sample_id,
             )
 
-            print("Sample submitted: ", sample_name, submit_status, file_path)
-
             self.update_file_status(
                 file_path,
                 submit_status,
@@ -776,7 +779,7 @@ class InsafluUploadRemote(InsafluUpload):
 
         return project_file
 
-    def get_project_results(self, project_name: str, output_dir: str):
+    def get_project_results(self, project_name: str, local_file: str):
 
         command = [
             "python3",
@@ -797,15 +800,6 @@ class InsafluUploadRemote(InsafluUpload):
         project_file = self.translate_project_results(submit_status)
 
         if project_file:
-
-            project_file_ext = os.path.splitext(
-                os.path.basename(project_file))[1]
-
-            local_file = os.path.join(
-                output_dir,
-                f"{project_name}{project_file_ext}",
-
-            )
 
             self.download_file(
                 project_file, local_file

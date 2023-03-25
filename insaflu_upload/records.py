@@ -1,21 +1,74 @@
 import os
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import List, Optional, Type
 
 import pandas as pd
 
 from insaflu_upload.upload_utils import InsafluUpload
-from mfmc.records import Processed, RunConfig
+from mfmc.records import ProcessAction, Processed
+
+
+class UploadStrategy(ABC):
+    """
+    abstract class to select files"""
+
+    @staticmethod
+    @abstractmethod
+    def is_to_upload(sample_list: list, sample_index: int) -> bool:
+        pass
+
+
+class UploadAll(UploadStrategy):
+    """
+    select all files"""
+
+    @staticmethod
+    def is_to_upload(sample_list: list, sample_index: int) -> bool:
+        return True
+
+
+class UploadLast(UploadStrategy):
+    """
+    select last files"""
+    @staticmethod
+    def is_to_upload(sample_list: list, sample_index: int) -> bool:
+        return sample_index == len(sample_list) - 1
+
+
+class UploadNone(UploadStrategy):
+    """
+    select no files"""
+
+    @staticmethod
+    def is_to_upload(sample_list: list, sample_index: int) -> bool:
+        return False
+
+
+class UploadStep(UploadStrategy):
+    """
+    select files by step"""
+
+    def __init__(self, step: int):
+        self.step = step
+
+    def is_to_upload(self, sample_list: list, sample_index: int) -> bool:
+        return sample_index % self.step == 0
 
 
 @dataclass
-class InfluConfig(RunConfig):
+class InfluConfig:
     """
     TelevirConfig class
     """
-
+    output_dir: str
+    name_tag: str
     uploader: InsafluUpload
+    upload_strategy: Type[UploadStrategy]
+    actions: Optional[List[Type[ProcessAction]]] = None
     tsv_temp_name: str = "televir_metadata.tsv"
     metadata_dir: str = "metadata_dir"
+    keep_name: bool = False
 
 
 class InfluProcessed(Processed):

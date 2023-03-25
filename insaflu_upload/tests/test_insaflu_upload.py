@@ -213,7 +213,7 @@ class TestUploadLog(unittest.TestCase):
             0,
             "fastq",)
 
-        sample_list = upload_log.generate_samples_list()
+        sample_list = upload_log.generate_fastq_list()
 
         sample = sample_list[0]
         assert sample.sample_id == "test"
