@@ -8,168 +8,7 @@ from typing import List, Optional
 import pandas as pd
 import paramiko
 
-
-class Connector(ABC):
-
-    @abstractmethod
-    def __init__(self):
-        pass
-
-    @abstractmethod
-    def test_connection(self):
-        pass
-
-    @abstractmethod
-    def execute_command(self, command: str) -> str:
-        pass
-
-    @abstractmethod
-    def check_file_exists(self, file_path: str) -> bool:
-        pass
-
-    @abstractmethod
-    def upload_file(self, file_path: str, remote_path: str):
-        pass
-
-    @abstractmethod
-    def download_file(self, file_path: str, remote_path: str):
-        pass
-
-    @abstractmethod
-    def __enter__(self):
-        pass
-
-    @abstractmethod
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-
-class ConnectorParamiko(Connector):
-
-    def __init__(self, config_file: str) -> None:
-        super().__init__()
-        self.prep_input(config_file)
-        self.connect()
-
-    def input_config(self, config_file: str):
-
-        config = configparser.ConfigParser()
-        config.read(config_file)
-
-        username = config["SSH"].get("username", None)
-        ip_address = config["SSH"].get("ip_address", None)
-        rsa_key_path = config["SSH"].get("rsa_key", None)
-
-        if username is None or ip_address is None or rsa_key_path is None:
-            raise ValueError("Config file is missing values")
-
-        return username, ip_address, rsa_key_path
-
-    def input_user(self):
-        username = input("username: ")
-        ip_address = input("ip_address: ")
-        rsa_key_path = input("rsa_key (full path): ")
-
-        return username, ip_address, rsa_key_path
-
-    def prep_input(self, config_file: Optional[str] = None):
-        if config_file is None:
-            username, ip_address, rsa_key_path = self.input_user()
-        try:
-            username, ip_address, rsa_key_path = self.input_config(config_file)
-        except FileNotFoundError:
-            print("Config file not found, please input manually")
-            username, ip_address, rsa_key_path = self.input_user()
-
-        self.username = username
-        self.ip_address = ip_address
-        self.rsa_key_path = rsa_key_path
-
-    def connect(self):
-
-        paramiko_rsa_key = paramiko.RSAKey.from_private_key_file(
-            self.rsa_key_path)
-        self.rsa_key = paramiko_rsa_key
-
-        self.conn = paramiko.SSHClient()
-        self.conn.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.test_connection()
-
-    def __enter__(self):
-
-        try:
-
-            self.conn.connect(
-                hostname=f"{self.ip_address}",
-                username=f"{self.username}",
-                pkey=self.rsa_key
-            )
-
-        except paramiko.ssh_exception.SSHException as error:
-            print("SSH connection error")
-            # print(error)
-            sys.exit(1)
-
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.conn.close()
-
-    def test_connection(self) -> None:
-        """
-        test using paramiko using rsa key. If successful, close connection, else exit
-        """
-
-        try:
-            self.conn.connect(
-                hostname=f"{self.ip_address}",
-                username=f"{self.username}",
-                pkey=self.rsa_key
-            )
-            self.conn.close()
-        except Exception:
-            print("Authentication failed, please verify your credentials")
-            sys.exit(1)
-
-    def execute_command(self, command: str) -> str:
-        """
-        execute command using paramiko"""
-
-        with self as conn:
-            stdin, stdout, stderr = self.conn.exec_command(command)
-
-            return stdout.read().decode("utf-8")
-
-    def check_file_exists(self, file_path: str) -> bool:
-        """
-        check file exists using paramiko"""
-
-        with self as conn:
-            stdin, stdout, stderr = self.conn.exec_command(f"ls {file_path}")
-
-            if len(stdout.read().decode("utf-8")) > 0:
-                if "cannot access" in stdout.read().decode("utf-8"):
-                    return False
-
-                return True
-
-            return False
-
-    def upload_file(self, file_path: str, remote_path: str):
-        """
-        upload file using paramiko"""
-        with self as conn:
-            ftp_client = self.conn.open_sftp()
-            ftp_client.put(file_path, remote_path)
-            ftp_client.close()
-
-    def download_file(self, remote_path: str, file_path: str):
-        """
-        download file using paramiko"""
-        with self as conn:
-            ftp_client = self.conn.open_sftp()
-            ftp_client.get(remote_path, file_path)
-            ftp_client.close()
+from insaflu_upload.connectors import Connector
 
 
 class InsafluSampleCodes:
@@ -512,35 +351,49 @@ class InsafluUploadRemote(InsafluUpload):
         super().__init__()
         self.logger = UploadLog()
         self.conn = connector
+        self.prep_config(config_file=config_file)
         self.prep_upload()
-        self.prep_user(config_file=config_file)
+        self.test_insaflu_user_exists()
 
     def input_config(self, config_file: str):
+        """
+        input config"""
 
         config = configparser.ConfigParser()
         config.read(config_file)
 
         username = config["INSAFLU"].get("username", None)
+        app_dir = config["INSAFLU"].get("app_dir", None)
 
         if username is None:
             raise ValueError("username not found in config file")
 
-        return username
+        if app_dir is None:
+            raise ValueError("app_dir not found in config file")
+
+        return username, app_dir
 
     def input_user(self):
+        """
+        input user"""
+
         username = input("INSaFLU username: ")
+        app_dir = input("INSaFLU application directory: ")
 
-        return username
+        return username, app_dir
 
-    def prep_user(self, config_file: Optional[str] = None):
+    def prep_config(self, config_file: Optional[str] = None):
+        """
+        prepare user"""
 
         if config_file is None:
-            self.televir_user = self.input_user()
+            self.televir_user, self.app_dir = self.input_user()
         else:
             try:
-                self.televir_user = self.input_config(config_file=config_file)
+                self.televir_user, self.app_dir = self.input_config(
+                    config_file=config_file)
             except ValueError:
-                self.televir_user = self.input_user()
+                self.televir_user, self.app_dir = self.input_user()
 
     def prep_upload(self):
         """
@@ -548,6 +401,12 @@ class InsafluUploadRemote(InsafluUpload):
         self.django_manager = os.path.join(
             self.app_dir,
             "manage.py"
+        )
+
+        self.remote_dir = os.path.join(
+            self.app_dir,
+            "media",
+            "uploads"
         )
 
         self.test_connection()
@@ -558,6 +417,18 @@ class InsafluUploadRemote(InsafluUpload):
         """
 
         self.conn.test_connection()
+
+    def test_insaflu_user_exists(self):
+        """
+        test insaflu user exists"""
+
+        command = "python3 {} show_all_users".format(self.django_manager)
+
+        output = self.conn.execute_command(command=command)
+
+        if self.televir_user not in output:
+            print(f"Insaflu user {self.televir_user} does not exist")
+            sys.exit(1)
 
     def update_log(self, sample_id: str, barcode: str, file_path: str, remote_path: str, status: int = UploadLog.STATUS_UPLOADED):
         """

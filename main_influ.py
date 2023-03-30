@@ -1,9 +1,10 @@
 
 import argparse
 
+from insaflu_upload.connectors import ConnectorDocker, ConnectorParamiko
 from insaflu_upload.insaflu_upload import InfluConfig, InsafluPreMain
 from insaflu_upload.records import UploadAll, UploadLast
-from insaflu_upload.upload_utils import ConnectorParamiko, InsafluUploadRemote
+from insaflu_upload.upload_utils import InsafluUploadRemote
 from mfmc.records import ProcessActionMergeWithLast
 
 
@@ -34,6 +35,11 @@ def get_arguments():
                         choices=['last', 'all'],
                         help='file upload stategy (default: all)',)
 
+    parser.add_argument('--connect',
+                        default='docker',
+                        choices=['docker', 'ssh'],
+                        help='file upload stategy (default: all)',)
+
     parser.add_argument(
         "--keep_names", help="keep original file names", action="store_true")
 
@@ -44,7 +50,13 @@ def main():
 
     args = get_arguments()
 
-    connector = ConnectorParamiko(args.config)
+    # create connector
+
+    if args.connect == 'docker':
+        connector = ConnectorDocker(args.config)
+
+    else:
+        connector = ConnectorParamiko(args.config)
 
     insaflu_upload = InsafluUploadRemote(connector, args.config)
 
@@ -59,6 +71,8 @@ def main():
     if args.merge:
         actions.append(ProcessActionMergeWithLast)
 
+    # create run metadata
+
     run_metadata = InfluConfig(
         output_dir=args.out_dir,
         name_tag=args.tag,
@@ -69,6 +83,8 @@ def main():
         metadata_dir=args.tsv_t_dir,
         keep_name=args.keep_names
     )
+
+    # run
 
     compressor = InsafluPreMain(
         args.in_dir,
