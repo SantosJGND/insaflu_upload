@@ -30,7 +30,7 @@ def main():
     run_metadata = RunConfig(
         args.out_dir,
         args.tag,
-        actions=[ProcessActionMergeWithLast]
+        actions=[ProcessActionMergeWithLast],
         keep_name=args.keep_names
     )
 

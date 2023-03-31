@@ -4,6 +4,7 @@ import os
 import shutil
 
 from natsort import natsorted
+from xopen import xopen
 
 
 class ConstantsSettings:
@@ -136,17 +137,11 @@ class Utils:
     def append_file_to_gz(filepath, filedest):
         """
         Copies the file 'filepath' to gzip file filedest."""
-        file_ext = os.path.splitext(filepath)[1]
-
-        local_open = open
-        if file_ext == '.gz':
-            local_open = gzip.open
-
         print("appending file: ", filepath, " to ", filedest, "")
 
         try:
-            with local_open(filepath, 'rb') as f_in:
-                with gzip.open(filedest, 'ab') as f_out:
+            with xopen(filepath, 'rb') as f_in:
+                with xopen(filedest, 'ab', threads=0, compresslevel=3) as f_out:
                     shutil.copyfileobj(f_in, f_out)
 
         except FileNotFoundError:
