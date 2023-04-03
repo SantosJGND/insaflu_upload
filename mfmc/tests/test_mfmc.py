@@ -6,7 +6,7 @@ import unittest
 import pandas as pd
 
 from mfmc.mfmc import DirectoryProcessing, PreMain, RunConfig
-from mfmc.records import Processed
+from mfmc.records import ProcessActionMergeWithLast, Processed
 from mfmc.utilities import ConstantsSettings, Utils
 
 
@@ -44,6 +44,7 @@ class TestPreMain(unittest.TestCase):
 
         self.run_metadata = RunConfig(
             output_dir=self.output_dir,
+            actions=[ProcessActionMergeWithLast],
             name_tag="test",
         )
 

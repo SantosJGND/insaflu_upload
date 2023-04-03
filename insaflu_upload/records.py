@@ -69,6 +69,7 @@ class InfluConfig:
     tsv_temp_name: str = "televir_metadata.tsv"
     metadata_dir: str = "metadata_dir"
     keep_name: bool = False
+    deploy_televir: bool = False
 
 
 class InfluProcessed(Processed):

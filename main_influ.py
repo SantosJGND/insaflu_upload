@@ -19,7 +19,7 @@ def get_arguments():
                         help="TSV template name", default="templates_comb.tsv")
     parser.add_argument("-d", "--tsv_t_dir",
                         help="TSV template directory", required=True)
-    parser.add_argument("-s", "--sleep", help="Sleep time", default=60,
+    parser.add_argument("-s", "--sleep", help="Sleep time between checks in monitor mode", default=60,
                         type=int)
 
     parser.add_argument("-n", "--tag", help="name tag, if given, will be added to the output file names",
@@ -38,10 +38,17 @@ def get_arguments():
     parser.add_argument('--connect',
                         default='docker',
                         choices=['docker', 'ssh'],
-                        help='file upload stategy (default: all)',)
+                        help='file upload stategy (default: docker)',)
 
     parser.add_argument(
         "--keep_names", help="keep original file names", action="store_true")
+
+    parser.add_argument(
+        "--monitor", help="monitor directory until killed", action="store_true")
+
+    parser.add_argument(
+        "--televir", help="deploy televir pathogen identification on each sample", action="store_true"
+    )
 
     return parser.parse_args()
 
@@ -81,7 +88,8 @@ def main():
         actions=actions,
         tsv_temp_name=args.tsv_t_n,
         metadata_dir=args.tsv_t_dir,
-        keep_name=args.keep_names
+        keep_name=args.keep_names,
+        deploy_televir=args.televir
     )
 
     # run
@@ -92,7 +100,11 @@ def main():
         args.sleep
     )
 
-    compressor.run_until_killed()
+    if args.monitor:
+        compressor.run_until_killed()
+
+    else:
+        compressor.run()
 
 
 if __name__ == "__main__":

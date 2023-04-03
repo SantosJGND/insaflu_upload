@@ -9,8 +9,6 @@ import os
 import subprocess
 import sys
 import time
-from abc import ABC, abstractmethod
-from typing import List, Tuple
 
 import pandas as pd
 
@@ -434,18 +432,22 @@ class DirectoryProcessingSimple(DirectoryProcessing):
         self.update_processed(fastq_file, self.fastq_dir,
                               destination_file)
 
-        return destination_file
+        return self
+
+    def local_process(self):
+
+        files_to_process = self.get_files()
+
+        for ix, fastq_file in enumerate(files_to_process):
+            self.process_file(fastq_file)
 
     def process_folder(self):
         """
-        process folder
+        process folder, merge and update metadata
+        submit to televir only the last file.
         """
-
         self.prep_output_dirs()
-
-        for fastq_file in self.get_files():
-            destination_file = self.process_file(fastq_file)
-
+        self.local_process()
 
 ############################ SYSTEM STUFF ##########################
 

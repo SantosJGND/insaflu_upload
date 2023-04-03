@@ -128,22 +128,30 @@ class InfluDirectoryProcessing(DirectoryProcessingSimple):
         self.upload_sample(new_entry)
         self.submit_sample(new_entry)
 
+    def insaflu_process(self):
+        """
+        prepare processed files for upload
+        """
+
+        files_to_upload = self.processed.processed.fastq.tolist()
+
+        for ix, row in self.processed.processed.iterrows():
+
+            fastq_file = row.fastq
+            merged_file = row.merged
+
+            if self.run_metadata.upload_strategy.is_to_upload(files_to_upload, ix):
+                self.televir_process_file(
+                    fastq_file, merged_file
+                )
+
     def process_folder(self):
         """
         process folder, merge and update metadata
         submit to televir only the last file.
         """
-
-        self.prep_output_dirs()
-        files_to_process = self.get_files()
-
-        for ix, fastq_file in enumerate(files_to_process):
-            merged_file = self.process_file(fastq_file)
-
-            if self.run_metadata.upload_strategy.is_to_upload(files_to_process, ix):
-                self.televir_process_file(
-                    fastq_file, merged_file
-                )
+        super().process_folder()
+        self.insaflu_process()
 
 
 class InsafluPreMain(PreMain):
@@ -196,7 +204,7 @@ class InsafluPreMain(PreMain):
             self.run_metadata
         )
 
-    def process_samples(self):
+    def monitor_samples_status(self):
         """
         process samples
         """
@@ -204,21 +212,46 @@ class InsafluPreMain(PreMain):
         fastq_list = self.uploader.logger.generate_fastq_list()
 
         for fastq in fastq_list:
+
+            file_name, _ = self.processed.get_run_info(fastq.file_path)
+
+            _ = self.uploader.update_sample_status_remote(
+                file_name, fastq.file_path)
+
+    def deploy_televir_sample(self, sample_id, file_name, file_path, project_name):
+        """
+        deploy televir sample
+        """
+
+        status = self.uploader.get_sample_status(
+            file_name)
+
+        if status == InsafluSampleCodes.STATUS_UPLOADED:
+
+            status = self.uploader.deploy_televir_sample(
+                sample_id,
+                file_name,
+                file_path,
+                project_name,
+            )
+
+    def deploy_televir_batch(self):
+        """
+        deploy televir batch
+        """
+        fastq_list = self.uploader.logger.generate_fastq_list()
+
+        for fastq in fastq_list:
             project_name = fastq.sample_id
 
             file_name, _ = self.processed.get_run_info(fastq.file_path)
 
-            status = self.uploader.update_sample_status_remote(
-                file_name, fastq.file_path)
-
-            if status == InsafluSampleCodes.STATUS_UPLOADED:
-
-                status = self.uploader.deploy_televir_sample(
-                    fastq.sample_id,
-                    file_name,
-                    fastq.file_path,
-                    project_name,
-                )
+            self.deploy_televir_sample(
+                fastq.sample_id,
+                file_name,
+                fastq.file_path,
+                project_name,
+            )
 
     def download_project_results(self):
         """
@@ -242,6 +275,10 @@ class InsafluPreMain(PreMain):
 
     def run(self):
         super().run()
-        self.process_samples()
-        self.download_project_results()
+        self.monitor_samples_status()
         self.export_global_metadata()
+
+        if self.run_metadata.deploy_televir:
+
+            self.deploy_televir_batch()
+            self.download_project_results()

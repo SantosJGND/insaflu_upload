@@ -1,0 +1,11 @@
+dataclasses==0.6
+natsort==8.3.1
+pandas==1.5.3
+pip==21.2.3
+setuptools==57.4.0
+xopen==1.7.0
+pytest==6.2.5
+pytest-cov==4.0.0
+mock-ssh-server==0.9.1
+pyasn1==0.4.8
+Twisted==16.7.0rc2
