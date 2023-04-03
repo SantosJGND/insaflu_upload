@@ -134,8 +134,8 @@ class ConnectorParamiko(Connector):
         execute command using paramiko"""
 
         with self as conn:
-            stdin, stdout, stderr = self.conn.exec_command(command)
 
+            stdin, stdout, stderr = self.conn.exec_command(command)
             return stdout.read().decode("utf-8")
 
     def check_file_exists(self, file_path: str) -> bool:

@@ -168,6 +168,9 @@ class Processed:
         get project name
         """
         merged_filename = os.path.basename(merged_file)
+        if merged_filename.endswith(".gz"):
+            merged_filename = os.path.splitext(merged_filename)[0]
+
         sample_id = merged_filename.split("_")
 
         if len(sample_id) == 1:

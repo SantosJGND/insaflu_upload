@@ -280,6 +280,10 @@ class InsafluUpload(ABC):
             else:
                 return InsafluSampleCodes.STATUS_UPLOADING
 
+        if "Session terminated" in status_output:
+            print("Session terminated")
+            sys.exit(1)
+
         return InsafluSampleCodes.STATUS_ERROR
 
     @staticmethod
@@ -571,8 +575,10 @@ class InsafluUploadRemote(InsafluUpload):
     def get_sample_status(self, sample_name: str):
         """
         get sample status"""
+
+        command = f"python3 {self.django_manager} check_sample_status --name {sample_name} --user_login {self.televir_user}"
         sample_status = self.conn.execute_command(
-            f"python3 {self.django_manager} check_sample_status --name {sample_name} --user_login {self.televir_user}"
+            command
         )
 
         return self.translate_sample_status(sample_status)

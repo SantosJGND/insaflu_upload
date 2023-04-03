@@ -118,7 +118,7 @@ class InfluDirectoryProcessing(DirectoryProcessingSimple):
             insaflu_metadata_file,
         )
 
-    def televir_process_file(self, fastq_file, merged_file):
+    def insaflu_process_file(self, fastq_file, merged_file):
         """
         process file for televir, upload and submit"""
 
@@ -139,11 +139,19 @@ class InfluDirectoryProcessing(DirectoryProcessingSimple):
 
             fastq_file = row.fastq
             merged_file = row.merged
+            merged_name = self.get_filename_from_path(merged_file)
 
-            if self.run_metadata.upload_strategy.is_to_upload(files_to_upload, ix):
-                self.televir_process_file(
-                    fastq_file, merged_file
-                )
+            status = self.uploader.get_sample_status(merged_name)
+
+            if status in [
+                InsafluSampleCodes.STATUS_MISSING,
+                InsafluSampleCodes.STATUS_ERROR,
+            ]:
+
+                if self.run_metadata.upload_strategy.is_to_upload(files_to_upload, ix):
+                    self.insaflu_process_file(
+                        fastq_file, merged_file
+                    )
 
     def process_folder(self):
         """
@@ -151,6 +159,7 @@ class InfluDirectoryProcessing(DirectoryProcessingSimple):
         submit to televir only the last file.
         """
         super().process_folder()
+        print("processed")
         self.insaflu_process()
 
 
