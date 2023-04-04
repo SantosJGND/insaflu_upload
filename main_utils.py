@@ -1,4 +1,3 @@
-
 import argparse
 
 from insaflu_upload.connectors import ConnectorDocker, ConnectorParamiko
@@ -53,7 +52,7 @@ def get_arguments():
     return parser.parse_args()
 
 
-def main():
+def generate_compressor():
 
     args = get_arguments()
 
@@ -94,18 +93,10 @@ def main():
 
     # run
 
-    compressor = InsafluPreMain(
+    influ_compressor = InsafluPreMain(
         args.in_dir,
         run_metadata,
         args.sleep
     )
 
-    if args.monitor:
-        compressor.run_until_killed()
-
-    else:
-        compressor.run()
-
-
-if __name__ == "__main__":
-    main()
+    return influ_compressor

@@ -136,6 +136,19 @@ class Processed:
         else:
             return ""
 
+    def get_id_merged_last(self, sample_id: str) -> str:
+        """
+        get last run
+        """
+
+        dir_processed = self.processed.loc[self.processed["sample_id"] == sample_id].sort_values(
+            by="time", ascending=False)
+
+        if len(dir_processed) > 0:
+            return dir_processed["merged"].iloc[0]
+        else:
+            return ""
+
     def get_file_time(self, fastq_file, fastq_dir):
         """
         get time
@@ -226,7 +239,7 @@ class ProcessAction(ABCMeta):
 
     @staticmethod
     @abstractmethod
-    def process(fastq_file: str, processed: Processed):
+    def process(fastq_file: str, sample_id: str, processed: Processed):
         """
         process
         """
@@ -234,16 +247,16 @@ class ProcessAction(ABCMeta):
 
 
 class ProcessActionMergeWithLast(ProcessAction):
-    """
+    """get_dir_merged_last
     class to merge with last"""
 
     @staticmethod
-    def process(fastq_file: str, processed: Processed):
+    def process(fastq_file: str, sample_id: str, processed: Processed):
         """
         process
         """
-        last_run_file = processed.get_dir_merged_last(
-            os.path.dirname(fastq_file))
+        last_run_file = processed.get_id_merged_last(
+            sample_id)
 
         if last_run_file == "":
             return

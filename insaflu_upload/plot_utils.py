@@ -158,6 +158,9 @@ def plot_project_results(projects_results: List[str], processed: pd.DataFrame, p
 
         figures.append(fig_proj)
 
+    if len(figures) == 0:
+        return None
+
     fig = make_subplots(rows=len(figures), cols=1)
 
     for i, figure in enumerate(figures):

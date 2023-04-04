@@ -320,25 +320,7 @@ class DirectoryProcessing():
 
         open(merged_name, 'a').close()
 
-        last_run_file = self.processed.get_dir_merged_last(fastq_dir)
-
-        if last_run_file:
-            utils.copy_file(last_run_file, merged_name)
-
         return merged_name
-
-    def merge_with_last(self, fastq_file: str):
-        """
-        merge with last
-        """
-
-        utils = Utils()
-
-        last_run_file = self.processed.get_dir_merged_last(self.fastq_dir)
-
-        utils.append_file_to_gz(
-            last_run_file, fastq_file
-        )
 
     def update_processed(self, fastq_file, fastq_dir, merged_file):
         """
@@ -384,23 +366,6 @@ class DirectoryProcessing():
         else:
             return self.get_merged_file_name(fastq_file, fastq_dir)
 
-    def process_file(self, fastq_file):
-
-        merged_file = self.create_merged_file(fastq_file, self.fastq_dir)
-
-        self.update_processed(fastq_file, self.fastq_dir,
-                              merged_file)
-
-    def process_folder(self):
-        """
-        process folder
-        """
-
-        self.prep_output_dirs()
-
-        for fastq_file in self.get_files():
-            self.process_file(fastq_file)
-
 
 class DirectoryProcessingSimple(DirectoryProcessing):
     """
@@ -423,11 +388,17 @@ class DirectoryProcessingSimple(DirectoryProcessing):
             destination_file = self.set_destination_filepath(
                 fastq_file, self.fastq_dir)
 
+            print("destination_file", destination_file)
+
             self.append_to_file(fastq_file, destination_file)
+
+            sample_id = self.processed.get_sample_id_from_merged(
+                destination_file)
 
             for process_action in self.run_metadata.actions:
 
-                process_action.process(destination_file, self.processed)
+                process_action.process(
+                    destination_file, sample_id, self.processed)
 
         self.update_processed(fastq_file, self.fastq_dir,
                               destination_file)
