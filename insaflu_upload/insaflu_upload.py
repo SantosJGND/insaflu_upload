@@ -4,6 +4,9 @@ import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
+import pandas as pd
+
+from insaflu_upload.plot_utils import plot_project_results
 from insaflu_upload.records import InfluConfig, InfluProcessed, MetadataEntry
 from insaflu_upload.upload_utils import InsafluSampleCodes, InsafluUpload
 from mfmc.mfmc import DirectoryProcessingSimple, PreMain
@@ -76,6 +79,36 @@ class InfluDirectoryProcessing(DirectoryProcessingSimple):
 
         return metadata_entry
 
+    def register_sample(self, metadata_entry: MetadataEntry):
+        """
+        register sample to remote server"""
+
+        metadata_filename = self.metadata_name_for_sample(
+            metadata_entry.fastq1)
+
+        metadata_path = os.path.join(
+            self.metadir,
+            metadata_filename
+        )
+
+        if self.uploader.check_file_exists(metadata_path):
+            if self.uploader.check_file_exists(metadata_entry.r1_local):
+                return
+
+        _, barcode = self.processed.get_run_barcode(
+            metadata_entry.fastq1, self.metadir)
+
+        sample_id = self.processed.get_sample_id_from_merged(
+            metadata_entry.fastq1
+        )
+
+        self.uploader.register_sample(
+            metadata_entry.r1_local,
+            metadata_path,
+            sample_id=sample_id,
+            barcode=barcode,
+        )
+
     def upload_sample(self, metadata_entry: MetadataEntry):
         """
         upload sample to remote server"""
@@ -143,12 +176,19 @@ class InfluDirectoryProcessing(DirectoryProcessingSimple):
 
             status = self.uploader.get_sample_status(merged_name)
 
-            if status in [
-                InsafluSampleCodes.STATUS_MISSING,
-                InsafluSampleCodes.STATUS_ERROR,
-            ]:
+            if self.run_metadata.upload_strategy.is_to_upload(files_to_upload, ix):
 
-                if self.run_metadata.upload_strategy.is_to_upload(files_to_upload, ix):
+                metadata_entry = self.processed.generate_metadata_entry(
+                    fastq_file, self.fastq_dir, merged_file
+                )
+
+                self.register_sample(metadata_entry)
+
+                if status in [
+                    InsafluSampleCodes.STATUS_MISSING,
+                    InsafluSampleCodes.STATUS_ERROR,
+                ]:
+
                     self.insaflu_process_file(
                         fastq_file, merged_file
                     )
@@ -159,7 +199,6 @@ class InfluDirectoryProcessing(DirectoryProcessingSimple):
         submit to televir only the last file.
         """
         super().process_folder()
-        print("processed")
         self.insaflu_process()
 
 
@@ -219,6 +258,7 @@ class InsafluPreMain(PreMain):
         """
 
         fastq_list = self.uploader.logger.generate_fastq_list()
+        print(len(fastq_list))
 
         for fastq in fastq_list:
 
@@ -280,9 +320,23 @@ class InsafluPreMain(PreMain):
                     sample_id, project_file
                 )
 
-                self.update_projects(sample_id)
+                self.update_projects(project_file)
 
     def run(self):
+        super().run()
+        print("Monitoring samples status")
+        self.monitor_samples_status()
+        self.export_global_metadata()
+
+        if self.run_metadata.deploy_televir:
+            print("Deploying televir batch")
+
+            self.deploy_televir_batch()
+            self.download_project_results()
+            _ = plot_project_results(
+                self.projects_results, self.processed.processed, self.run_metadata.output_dir)
+
+    def run_return_plot(self):
         super().run()
         self.monitor_samples_status()
         self.export_global_metadata()
@@ -291,3 +345,7 @@ class InsafluPreMain(PreMain):
 
             self.deploy_televir_batch()
             self.download_project_results()
+            return plot_project_results(
+                self.projects_results, self.processed.processed, self.run_metadata.output_dir, write_html=False)
+
+        return None

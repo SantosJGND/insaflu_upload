@@ -142,18 +142,22 @@ class UploadLog:
 
         self.log.loc[self.log["file_path"] == file_path, "status"] = status
 
-    def update_log(self, sample_id: str, barcode: str, file_path: str, remote_path: str, status: int):
+    def update_log(self, sample_id: str, barcode: str, file_path: str, remote_path: str, status: int, tag: Optional[str] = None):
         """
         update upload log"""
 
         if self.check_entry_exists(file_path):
             self.modify_entry_status(file_path, status)
         else:
-            self.new_entry(sample_id, barcode, file_path, remote_path, status)
+            self.new_entry(sample_id, barcode, file_path,
+                           remote_path, status, tag)
 
     def new_entry(self, sample_id: str, barcode: str, file_path: str, remote_path: str, status: int = STATUS_UPLOADED, tag: Optional[str] = None) -> None:
         """
         new entry"""
+
+        if self.check_entry_exists(file_path):
+            return
 
         self.log = pd.concat(
             [
@@ -228,6 +232,12 @@ class InsafluUpload(ABC):
     def download_file(self, remote_path, local_path):
         """
         download file"""
+        pass
+
+    @abstractmethod
+    def register_sample(self, fastq_path: str, metadata_path: str, sample_id: str = "NA", barcode: str = ""):
+        """
+        register sample using metadir and fastq path"""
         pass
 
     @abstractmethod
@@ -492,7 +502,7 @@ class InsafluUploadRemote(InsafluUpload):
                 print(error)
                 status = self.logger.STATUS_ERROR
 
-        self.logger.new_entry(
+        self.logger.update_log(
             sample_id=sample_id,
             barcode=barcode,
             file_path=file_path,
@@ -512,6 +522,26 @@ class InsafluUploadRemote(InsafluUpload):
             except Exception as error:
                 print("Error downloading file: ", remote_path)
                 print(error)
+
+    def register_sample(self, fastq_path: str, metadata_path: str, sample_id: str = "NA", barcode: str = ""):
+
+        self.logger.new_entry(
+            sample_id=sample_id,
+            barcode=barcode,
+            file_path=metadata_path,
+            remote_path=self.get_remote_path(metadata_path),
+            status=InsafluSampleCodes.STATUS_MISSING,
+            tag=self.TAG_METADATA
+        )
+
+        self.logger.new_entry(
+            sample_id=sample_id,
+            barcode=barcode,
+            file_path=fastq_path,
+            remote_path=self.get_remote_path(fastq_path),
+            status=InsafluSampleCodes.STATUS_MISSING,
+            tag=self.TAG_FASTQ
+        )
 
     def upload_sample(self, fastq_path: str, metadata_path: str, sample_id: str = "NA", barcode: str = ""):
         """
