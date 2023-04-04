@@ -159,9 +159,9 @@ if __name__ == '__main__':
         inputs=Input("button_id", "n_clicks"),
         background=True,
         manager=background_callback_manager,
-        # progress=Output("plot_max", "figure"),
-        prevent_initial_call=True
+        progress=Output("plot_max", "figure"),
 
+        prevent_initial_call=True
     )
     def update_figure_global(n_intervals):
         # global compressor

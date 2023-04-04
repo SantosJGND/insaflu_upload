@@ -258,7 +258,6 @@ class InsafluPreMain(PreMain):
         """
 
         fastq_list = self.uploader.logger.generate_fastq_list()
-        print(len(fastq_list))
 
         for fastq in fastq_list:
 
