@@ -64,12 +64,16 @@ class PreMain:
         self.processed = Processed(
             output_dir=self.run_metadata.output_dir)
 
+        self.log_dir = os.path.join(
+            self.run_metadata.logs_dir,
+        )
+
     def prep_output_dirs(self):
         """
         create output directories
         """
         os.makedirs(self.run_metadata.output_dir, exist_ok=True)
-
+        os.makedirs(self.log_dir, exist_ok=True)
         return self
 
     def assess_depth_fastqs(self):
@@ -135,7 +139,7 @@ class PreMain:
          .process_fastq_dict())
 
         self.processed.export(
-            self.run_metadata.output_dir
+            self.run_metadata.logs_dir
         )
 
     def run_until_killed(self):
@@ -172,8 +176,7 @@ class DirectoryProcessing():
 
         self.merged_gz_dir = os.path.join(
             self.run_metadata.output_dir,
-            os.path.basename(self.fastq_dir.strip("/")),
-            self.merged_dir_name)
+            os.path.basename(self.fastq_dir.strip("/")),)
 
     def time_since_start(self):
         """

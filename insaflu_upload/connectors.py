@@ -277,12 +277,18 @@ class ConnectorDocker(Connector):
     def upload_file(self, file_path: str, remote_path: str):
         """
         upload file using docker cp"""
+        print("uploading file")
 
         bash_command = f"docker cp {file_path} {self.server_name}:{remote_path}"
+
+        print(bash_command)
 
         process = subprocess.Popen(
             bash_command.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
+
+        print(output)
+        print(error)
 
     def download_file(self, file_path: str, remote_path: str):
         """

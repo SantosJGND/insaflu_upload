@@ -277,3 +277,13 @@ class RunConfig:
     name_tag: str
     actions: Optional[List[Type[ProcessAction]]] = None
     keep_name: bool = False
+    logs_dirname: str = "logs"
+
+    def __post_init__(self):
+        """
+        post init
+        """
+        if self.actions is None:
+            self.actions = []
+
+        self.logs_dir = os.path.join(self.output_dir, self.logs_dirname)

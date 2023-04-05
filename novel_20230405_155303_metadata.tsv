@@ -1,0 +1,2 @@
+sample name	fastq1	fastq2	data set	vaccine status	week	onset date	collection date	lab reception date	latitude	longitude	region	country	division	location	time_elapsed	dir	tag	r1_local	r2_local
+barcode_01_novel_01-05	barcode_01_novel_01-05.fastq.gz														0	/insaflu_web/INSaFLU/media/uploads	novel	/insaflu_web/INSaFLU/media/uploads/barcode_01_novel_01-05.fastq.gz	

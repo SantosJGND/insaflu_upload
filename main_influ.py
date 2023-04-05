@@ -2,9 +2,9 @@
 import argparse
 
 from insaflu_upload.connectors import ConnectorDocker, ConnectorParamiko
-from insaflu_upload.insaflu_upload import InfluConfig, InsafluPreMain
-from insaflu_upload.records import UploadAll, UploadLast
-from insaflu_upload.upload_utils import InsafluUploadRemote
+from insaflu_upload.insaflu_upload import InfluConfig, InsafluFileProcess
+from insaflu_upload.upload_utils import (InsafluUploadRemote, UploadAll,
+                                         UploadLast)
 from mfmc.records import ProcessActionMergeWithLast
 
 
@@ -94,7 +94,7 @@ def main():
 
     # run
 
-    compressor = InsafluPreMain(
+    compressor = InsafluFileProcess(
         args.in_dir,
         run_metadata,
         args.sleep

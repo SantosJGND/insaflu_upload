@@ -6,52 +6,57 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 import pandas as pd
-import paramiko
 
 from insaflu_upload.connectors import Connector
+from insaflu_upload.records import InsafluFile, InsafluSampleCodes
+from insaflu_upload.tables_post import InsafluFilesTable
 
 
-class InsafluSampleCodes:
-    STATUS_MISSING = 0
-    STATUS_UPLOADING = 1
-    STATUS_UPLOADED = 2
-    STATUS_SUBMITTED = 3
-    STATUS_PROCESSING = 4
-    STATUS_PROCESSED = 5
-    STATUS_SUBMISSION_ERROR = 6
-    STATUS_ERROR = 7
+class UploadStrategy(ABC):
+    """
+    abstract class to select files"""
+
+    @staticmethod
+    @abstractmethod
+    def is_to_upload(sample_list: list, sample_index: int) -> bool:
+        pass
 
 
-@dataclass
-class InsafluFile:
-    sample_id: str
-    barcode: str
-    file_path: str
-    remote_path: str
-    status: int
+class UploadAll(UploadStrategy):
+    """
+    select all files"""
 
-    def __post_init__(self):
-        self.sample_id = self.sample_id.strip()
-        self.barcode = self.barcode.strip()
-        self.file_path = self.file_path.strip()
-        self.remote_path = self.remote_path.strip()
-        self.status = int(self.status)
+    @staticmethod
+    def is_to_upload(sample_list: list, sample_index: int) -> bool:
+        return True
 
-    def __str__(self):
-        return f"{self.sample_id},{self.barcode},{self.file_path},{self.remote_path},{self.status}"
 
-    def __repr__(self):
-        return f"{self.sample_id},{self.barcode},{self.file_path},{self.remote_path},{self.status}"
+class UploadLast(UploadStrategy):
+    """
+    select last files"""
+    @staticmethod
+    def is_to_upload(sample_list: list, sample_index: int) -> bool:
+        return sample_index == len(sample_list) - 1
 
-    def __eq__(self, other):
-        return self.sample_id == other.sample_id and \
-            self.barcode == other.barcode and \
-            self.file_path == other.file_path and \
-            self.remote_path == other.remote_path and \
-            self.status == other.status
 
-    def __hash__(self):
-        return hash((self.sample_id, self.barcode, self.file_path, self.remote_path, self.status))
+class UploadNone(UploadStrategy):
+    """
+    select no files"""
+
+    @staticmethod
+    def is_to_upload(sample_list: list, sample_index: int) -> bool:
+        return False
+
+
+class UploadStep(UploadStrategy):
+    """
+    select files by step"""
+
+    def __init__(self, step: int):
+        self.step = step
+
+    def is_to_upload(self, sample_list: list, sample_index: int) -> bool:
+        return sample_index % self.step == 0
 
 
 class UploadLog:
@@ -78,6 +83,7 @@ class UploadLog:
         self.log = pd.DataFrame(
             columns=self.columns
         )
+        CWD = os.getcwd()
 
     @property
     def available_samples(self) -> List[str]:
@@ -182,7 +188,21 @@ class UploadLog:
         """
         get file status"""
 
-        return self.log.loc[self.log["file_path"] == file_path, "status"].values[0]
+        files = self.log.loc[self.log["file_path"]
+                             == file_path, "status"].values
+
+        if len(files) == 0:
+            return self.STATUS_MISSING
+
+        return files[0]
+
+    def save_entries_to_db(self, table: InsafluFilesTable) -> None:
+        """
+        save entries to db"""
+
+        for _, row in self.log.iterrows():
+            influ_file = self.generate_InsafluFile(row)
+            table.add_sample(influ_file)
 
 
 class InsafluUpload(ABC):
@@ -195,6 +215,8 @@ class InsafluUpload(ABC):
     """
 
     logger: UploadLog
+    TAG_FASTQ = "fastq"
+    TAG_METADATA = "metadata"
     remote_dir: str = "/usr/local/web_site/INSaFLU/media/uploads/"
     app_dir = "/usr/local/web_site/INSaFLU/"
 
@@ -235,13 +257,13 @@ class InsafluUpload(ABC):
         pass
 
     @abstractmethod
-    def register_sample(self, fastq_path: str, metadata_path: str, sample_id: str = "NA", barcode: str = ""):
+    def register_sample(self, fastq_path: str, sample_id: str = "NA", barcode: str = ""):
         """
         register sample using metadir and fastq path"""
         pass
 
     @abstractmethod
-    def upload_sample(self, fastq_path: str, metadata_path: str, sample_id: str = "NA", barcode: str = ""):
+    def upload_sample(self, fastq_path: str, sample_id: str = "NA", barcode: str = ""):
         """
         upload sample using metadir and fastq path"""
         pass
@@ -523,16 +545,7 @@ class InsafluUploadRemote(InsafluUpload):
                 print("Error downloading file: ", remote_path)
                 print(error)
 
-    def register_sample(self, fastq_path: str, metadata_path: str, sample_id: str = "NA", barcode: str = ""):
-
-        self.logger.new_entry(
-            sample_id=sample_id,
-            barcode=barcode,
-            file_path=metadata_path,
-            remote_path=self.get_remote_path(metadata_path),
-            status=InsafluSampleCodes.STATUS_MISSING,
-            tag=self.TAG_METADATA
-        )
+    def register_sample(self, fastq_path: str, sample_id: str = "NA", barcode: str = ""):
 
         self.logger.new_entry(
             sample_id=sample_id,
@@ -543,17 +556,9 @@ class InsafluUploadRemote(InsafluUpload):
             tag=self.TAG_FASTQ
         )
 
-    def upload_sample(self, fastq_path: str, metadata_path: str, sample_id: str = "NA", barcode: str = ""):
+    def upload_sample(self, fastq_path: str, sample_id: str = "NA", barcode: str = ""):
         """
         upload sample using metadir and fastq path"""
-
-        self.upload_file(
-            metadata_path,
-            self.get_remote_path(metadata_path),
-            sample_id,
-            barcode,
-            self.TAG_METADATA
-        )
 
         self.upload_file(
             fastq_path,
