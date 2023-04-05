@@ -1,111 +1,122 @@
 
-import argparse
+import signal
+import sys
+import threading
+import time
+from _thread import interrupt_main
+from threading import Event, Thread
 
-from insaflu_upload.connectors import ConnectorDocker, ConnectorParamiko
-from insaflu_upload.insaflu_upload import InfluConfig, InsafluPreMain
-from insaflu_upload.records import UploadAll, UploadLast
-from insaflu_upload.upload_utils import InsafluUploadRemote
-from mfmc.records import ProcessActionMergeWithLast
-
-
-def get_arguments():
-
-    parser = argparse.ArgumentParser(description="Process fastq files.")
-    parser.add_argument(
-        "-i", "--in_dir", help="Input directory", required=True)
-    parser.add_argument("-o", "--out_dir",
-                        help="Output directory", required=True)
-    parser.add_argument("-t", "--tsv_t_n",
-                        help="TSV template name", default="templates_comb.tsv")
-    parser.add_argument("-d", "--tsv_t_dir",
-                        help="TSV template directory", required=True)
-    parser.add_argument("-s", "--sleep", help="Sleep time between checks in monitor mode", default=60,
-                        type=int)
-
-    parser.add_argument("-n", "--tag", help="name tag, if given, will be added to the output file names",
-                        required=False, type=str, default="")
-
-    parser.add_argument("--config", help="config file",
-                        required=False, type=str, default="config.ini")
-
-    parser.add_argument("--merge", help="merge files", action="store_true")
-
-    parser.add_argument('--upload',
-                        default='last',
-                        choices=['last', 'all'],
-                        help='file upload stategy (default: all)',)
-
-    parser.add_argument('--connect',
-                        default='docker',
-                        choices=['docker', 'ssh'],
-                        help='file upload stategy (default: docker)',)
-
-    parser.add_argument(
-        "--keep_names", help="keep original file names", action="store_true")
-
-    parser.add_argument(
-        "--monitor", help="monitor directory until killed", action="store_true")
-
-    parser.add_argument(
-        "--televir", help="deploy televir pathogen identification on each sample", action="store_true"
-    )
-
-    return parser.parse_args()
+from main_influ_app_test import generate_processors
 
 
-def main():
+class LockWithOwner:
 
-    args = get_arguments()
+    lock = threading.RLock()
+    owner = 'A'
 
-    # create connector
+    def acquire_for(self, owner):
+        n = 0
+        while True:
+            self.lock.acquire()
+            if self.owner == owner:
+                break
+            n += 1
+            self.lock.release()
+            time.sleep(0.001)
+        print("------------------")
+        print('lock acquired')
 
-    if args.connect == 'docker':
-        connector = ConnectorDocker(args.config)
+    def release_to(self, new_owner):
+        self.owner = new_owner
+        self.lock.release()
 
-    else:
-        connector = ConnectorParamiko(args.config)
 
-    insaflu_upload = InsafluUploadRemote(connector, args.config)
+class InsafluFileProcessThread(Thread):
+    def __init__(self, compressor, thread_lock: LockWithOwner):
+        super(InsafluFileProcessThread, self).__init__()
+        self.lock = thread_lock
+        self.compressor = compressor
+        self._stopevent = Event()  # initialize the event
 
-    # determine upload strategy
-    if args.upload == 'last':
-        upload_strategy = UploadLast
-    else:
-        upload_strategy = UploadAll
+    def run(self):
+        try:
+            while True:
+                self._stopevent.clear()  # Make sure the thread is unset
+                self.lock.acquire_for("A")
 
-    # determine actions
-    actions = []
-    if args.merge:
-        actions.append(ProcessActionMergeWithLast)
+                self.compressor.run()
+                lock.release_to('B')
 
-    # create run metadata
+        except Exception as e:
+            print(e)
+            interrupt_main()
 
-    run_metadata = InfluConfig(
-        output_dir=args.out_dir,
-        name_tag=args.tag,
-        uploader=insaflu_upload,
-        upload_strategy=upload_strategy,
-        actions=actions,
-        tsv_temp_name=args.tsv_t_n,
-        metadata_dir=args.tsv_t_dir,
-        keep_name=args.keep_names,
-        deploy_televir=args.televir
-    )
+    def stop(self):
+        self._stopevent.set()
 
-    # run
+    def join(self, timeout=None):
+        self._stopevent.set()
+        Thread.join(self, timeout)
 
-    compressor = InsafluPreMain(
-        args.in_dir,
-        run_metadata,
-        args.sleep
-    )
 
-    if args.monitor:
-        compressor.run_until_killed()
+class TelevirFileProcessThread(Thread):
+    def __init__(self, processor, thread_lock: LockWithOwner):
+        super(TelevirFileProcessThread, self).__init__()
+        self.lock = thread_lock
+        self.processor = processor
+        self._stopevent = Event()  # initialize the event
+        self.work_period = 15.0
 
-    else:
-        compressor.run()
+    def run(self):
+        try:
+            while True:
+                self._stopevent.clear()  # Make sure the thread is unset
+                self.lock.acquire_for("B")
+                start_time = time.time()
+                execution_time = 0
+
+                while execution_time < self.work_period:
+                    self.processor.run()
+                    execution_time = time.time() - start_time
+
+                lock.release_to('A')
+
+        except Exception as e:
+            print(e)
+            interrupt_main()
+
+    def stop(self):
+        self._stopevent.set()
+
+    def join(self, timeout=None):
+        self._stopevent.set()
+        Thread.join(self, timeout)
+
+
+def signal_handler(signal, frame):
+    print("exiting")
+    sys.exit(0)
 
 
 if __name__ == "__main__":
-    main()
+    signal.signal(signal.SIGINT, signal_handler)
+    file_processor, televir_processor = generate_processors()
+
+    lock = LockWithOwner()
+    lock.owner = 'A'
+
+    file_processor_task = InsafluFileProcessThread(
+        file_processor, lock
+    )
+    televir_processor_task = TelevirFileProcessThread(
+        televir_processor, lock
+    )
+
+    file_processor_task.daemon = True
+    televir_processor_task.daemon = True
+
+    file_processor_task.start()
+    televir_processor_task.start()
+
+    while True:
+        pass
