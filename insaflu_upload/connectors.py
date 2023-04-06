@@ -103,12 +103,17 @@ class ConnectorParamiko(Connector):
                 pkey=self.rsa_key
             )
 
-        except Exception as error:
-            print(error)
         except paramiko.ssh_exception.SSHException as error:
             print("SSH connection error")
-            # print(error)
             sys.exit(1)
+
+        except KeyboardInterrupt:
+            print("Keyboard interrupt")
+            sys.exit(1)
+
+        except Exception as error:
+            print("Unknown error")
+            print(error)
 
         return self
 

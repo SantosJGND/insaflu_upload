@@ -13,20 +13,6 @@ import seaborn as sns
 from plotly.subplots import make_subplots
 
 
-def get_accid_description(accid):
-    taxid = results_df[results_df["accid"] == accid]["taxid"].unique()[0]
-    sample_df = results_df[results_df["accid"] == accid]
-    return f"{accid} - {taxid} - {sample_df['description'].unique()[0]}"
-
-
-def get_accession_drop_down_info(accids):
-
-    accid_description_tuples = [
-        (accid, get_accid_description(accid)) for accid in accids]
-
-    return accid_description_tuples
-
-
 def get_sample_name_from_merged(merged):
     file_name = os.path.basename(merged)
     file_name, ext = os.path.splitext(file_name)
@@ -100,8 +86,8 @@ class TelevirPlotResults:
         self.prep_accid_stats()
 
     def preprocess_df(self):
-        self.processed_df["sample_name"] = self.processed_df.apply(
-            lambda x: get_sample_name_from_merged(x["merged"]), axis=1)
+        self.processed_df["sample_name"] = self.processed_df["merged"].apply(
+            get_sample_name_from_merged)
 
         self.results_df["time_elapsed"] = self.results_df["sample_name"].map(
             self.processed_df.set_index("sample_name")["time"])

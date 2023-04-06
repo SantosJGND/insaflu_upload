@@ -1,7 +1,8 @@
 import argparse
 
-from mfmc.mfmc import PreMain
-from mfmc.records import ProcessActionMergeWithLast, RunConfig
+from fastq_handler.fastq_handler import PreMain
+
+from fastq_handler.records import ProcessActionMergeWithLast, RunConfig
 
 
 def get_arguments():

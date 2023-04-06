@@ -7,12 +7,12 @@ from typing import List
 
 import pandas as pd
 
+from fastq_handler.fastq_handler import DirectoryProcessingSimple, PreMain
+from fastq_handler.records import Processed
 from insaflu_upload.configs import InfluConfig, default_log_handler
 from insaflu_upload.plot_utils import plot_project_results
 from insaflu_upload.records import InsafluFile, MetadataEntry
 from insaflu_upload.upload_utils import InsafluSampleCodes, InsafluUpload
-from mfmc.mfmc import DirectoryProcessingSimple, PreMain
-from mfmc.records import Processed
 
 
 class InfluProcessed(Processed):

@@ -6,6 +6,7 @@ import time
 from dataclasses import dataclass
 from typing import Tuple
 
+from fastq_handler.records import ProcessActionMergeWithLast
 from insaflu_upload.configs import InfluConfig
 from insaflu_upload.connectors import ConnectorDocker, ConnectorParamiko
 from insaflu_upload.drones import (InsafluFileProcessThread, LockWithOwner,
@@ -14,11 +15,6 @@ from insaflu_upload.insaflu_uploads import (InfluConfig, InsafluFileProcess,
                                             TelevirFileProcess)
 from insaflu_upload.upload_utils import (InsafluUploadRemote, UploadAll,
                                          UploadLast)
-from mfmc.records import ProcessActionMergeWithLast
-
-
-class KillError(Exception):
-    pass
 
 
 @dataclass
@@ -55,7 +51,7 @@ class MainInsaflu:
                             help="TSV template name", default="templates_comb.tsv")
         parser.add_argument("-d", "--tsv_t_dir",
                             help="TSV template directory", required=True)
-        parser.add_argument("-s", "--sleep", help="Sleep time between checks in monitor mode", default=60,
+        parser.add_argument("-s", "--sleep", help="Sleep time between checks in monitor mode", default=600,
                             type=int)
 
         parser.add_argument("-n", "--tag", help="name tag, if given, will be added to the output file names",

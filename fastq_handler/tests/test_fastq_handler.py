@@ -5,9 +5,9 @@ import unittest
 
 import pandas as pd
 
-from mfmc.mfmc import DirectoryProcessing, PreMain, RunConfig
-from mfmc.records import ProcessActionMergeWithLast, Processed
-from mfmc.utilities import ConstantsSettings, Utils
+from fastq_handler.fastq_handler import DirectoryProcessing, PreMain, RunConfig
+from fastq_handler.records import ProcessActionMergeWithLast, Processed
+from fastq_handler.utilities import ConstantsSettings, Utils
 
 
 class TestRunConfig(unittest.TestCase):
@@ -15,7 +15,7 @@ class TestRunConfig(unittest.TestCase):
     def test_run_config(self):
         run_config = RunConfig("te", "test")
 
-        assert run_config.output_dir == "te"
+        assert run_config.output_dir == os.path.abspath("te")
 
 
 class TestPreMain(unittest.TestCase):
@@ -43,14 +43,13 @@ class TestPreMain(unittest.TestCase):
         os.makedirs(self.fastq_dir, exist_ok=True)
 
         self.run_metadata = RunConfig(
+            fastq_dir=self.fastq_dir,
             output_dir=self.output_dir,
             actions=[ProcessActionMergeWithLast],
             name_tag="test",
+            sleep_time=self.real_sleep,
         )
-
         self.premain = PreMain(
-            real_sleep=self.real_sleep,
-            fastq_dir=self.fastq_dir,
             run_metadata=self.run_metadata,
         )
 
@@ -61,7 +60,7 @@ class TestPreMain(unittest.TestCase):
     def test_premain_init(self):
 
         processed = Processed(
-            output_dir=self.run_metadata.output_dir
+            output_dir=self.run_metadata.logs_dir
         )
 
         assert self.premain.real_sleep == self.real_sleep
@@ -123,8 +122,7 @@ class TestPreMain(unittest.TestCase):
 
         output_dir_merged = os.path.join(
             self.output_dir,
-            os.path.basename(self.fastq_dir),
-            DirectoryProcessing.merged_dir_name)
+            os.path.basename(self.fastq_dir))
 
         output_file = f"{os.path.basename(self.fastq_dir)}_test_00-00.fastq.gz"
 

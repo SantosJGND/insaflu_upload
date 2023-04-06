@@ -59,9 +59,13 @@ class InsafluFileProcessThread(Thread):
 
                 self.lock.release_to('B')
 
+        except KeyboardInterrupt:
+            pass
+
         except Exception as e:
+            print("HII")
             print(e)
-            interrupt_main(signum=signal.SIGKILL)
+            interrupt_main()
 
     def stop(self):
         self._stopevent.set()
@@ -103,9 +107,13 @@ class TelevirFileProcessThread(Thread):
 
                 self.lock.release_to('A')
 
+        except KeyboardInterrupt:
+            raise KeyboardInterrupt
+
         except Exception as e:
+            print("HII")
             print(e)
-            interrupt_main(signum=signal.SIGKILL)
+            interrupt_main()
 
     def stop(self):
         self._stopevent.set()

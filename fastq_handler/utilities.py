@@ -1,4 +1,3 @@
-import gzip
 import itertools as it
 import os
 import shutil

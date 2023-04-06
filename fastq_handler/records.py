@@ -7,7 +7,7 @@ from typing import List, Optional, Type
 
 import pandas as pd
 
-from mfmc.utilities import Utils
+from fastq_handler.utilities import Utils
 
 
 class Processed:

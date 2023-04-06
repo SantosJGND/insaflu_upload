@@ -12,8 +12,8 @@ import time
 
 import pandas as pd
 
-from mfmc.records import Processed, RunConfig
-from mfmc.utilities import Utils
+from fastq_handler.records import Processed, RunConfig
+from fastq_handler.utilities import Utils
 
 pd.options.mode.chained_assignment = None  # default='warn'
 

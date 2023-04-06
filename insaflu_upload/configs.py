@@ -5,9 +5,9 @@ import sys
 from dataclasses import dataclass
 from typing import Optional, Type
 
+from fastq_handler.records import InputState, OutputDirs, RunParams
 from insaflu_upload.tables_post import InsafluTables
 from insaflu_upload.upload_utils import InsafluUpload, UploadStrategy
-from mfmc.records import InputState, OutputDirs, RunParams
 
 default_log_handler = logging.StreamHandler(sys.stdout)
 default_log_handler.setLevel(logging.DEBUG)
