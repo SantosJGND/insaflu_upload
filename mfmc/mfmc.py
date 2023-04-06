@@ -62,7 +62,7 @@ class PreMain:
         self.real_sleep = real_sleep
 
         self.processed = Processed(
-            output_dir=self.run_metadata.output_dir)
+            output_dir=self.run_metadata.logs_dir)
 
         self.log_dir = os.path.join(
             self.run_metadata.logs_dir,
@@ -280,18 +280,6 @@ class DirectoryProcessing():
         utils.append_file_to_gz(
             fastq_file, destination_file
         )
-
-    def create_merged_file(self, fastq_file, fastq_dir):
-
-        utils = Utils()
-
-        merged_file = self.prep_merged_file(fastq_file, self.fastq_dir)
-
-        utils.append_file_to_gz(
-            fastq_file, merged_file
-        )
-
-        return merged_file
 
     def get_merged_file_name(self, fastq_file, fastq_dir):
 

@@ -65,7 +65,8 @@ class TelevirFileProcessThread(Thread):
         self.lock = thread_lock
         self.processor = processor
         self._stopevent = Event()  # initialize the event
-        self.work_period = 15.0
+        self.work_period = processor.real_sleep
+        print("work period: {} s".format(self.work_period))
 
     def run(self):
         try:
@@ -78,6 +79,7 @@ class TelevirFileProcessThread(Thread):
                 while execution_time < self.work_period:
                     self.processor.run()
                     execution_time = time.time() - start_time
+                    time.sleep(30)
 
                 lock.release_to('A')
 

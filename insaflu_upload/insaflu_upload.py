@@ -264,7 +264,7 @@ class InsafluFileProcess(PreMain):
         super().__init__(fastq_dir, run_metadata, sleep_time)
 
         self.processed = InfluProcessed(
-            self.run_metadata.metadata_dir,
+            self.run_metadata.logs_dir,
         )
 
         self.uploader = run_metadata.uploader
@@ -330,10 +330,8 @@ class InsafluFileProcess(PreMain):
         """
         get samples to submit
         """
-        samples_to_submit = self.uploader.logger.generate_fastq_list()
-
-        samples_to_submit = [
-            x for x in samples_to_submit if x.status == InsafluSampleCodes.STATUS_UPLOADED]
+        samples_to_submit = self.uploader.logger.generate_fastq_list_status(
+            InsafluSampleCodes.STATUS_UPLOADED)
 
         return samples_to_submit
 
@@ -360,6 +358,16 @@ class InsafluFileProcess(PreMain):
         print(f"Submitting {len(sample_metadata)} samples")
 
         self.submit_samples(sample_metadata)
+
+    def clean_remote(self):
+        """
+        clean remote server
+        """
+        samples_to_clean = self.uploader.logger.generate_fastq_list_status(
+            InsafluSampleCodes.STATUS_SUBMITTED)
+
+        for sample in samples_to_clean:
+            self.uploader.clean_upload(sample.remote_path)
 
     def submit_samples(self, sample_metadata: List[MetadataEntry]):
         """
@@ -422,8 +430,9 @@ class InsafluFileProcess(PreMain):
 
     def run(self):
         super().run()
-        print("Monitoring samples status")
         self.submit()
+        self.clean_remote()
+        print("Monitoring samples status")
         self.monitor_samples_status()
         self.export_global_metadata()
         self.save_to_db()
@@ -442,7 +451,7 @@ class TelevirFileProcess(PreMain):
         super().__init__(fastq_dir, run_metadata, sleep_time)
 
         self.processed = InfluProcessed(
-            self.run_metadata.metadata_dir,
+            self.run_metadata.logs_dir,
         )
 
         self.uploader = run_metadata.uploader
@@ -468,7 +477,7 @@ class TelevirFileProcess(PreMain):
         status = self.uploader.get_sample_status(
             file_name)
 
-        if status == InsafluSampleCodes.STATUS_UPLOADED:
+        if status == InsafluSampleCodes.STATUS_SUBMITTED:
 
             status = self.uploader.deploy_televir_sample(
                 sample_id,
@@ -481,7 +490,8 @@ class TelevirFileProcess(PreMain):
         """
         deploy televir batch
         """
-        fastq_list = self.uploader.logger.generate_fastq_list()
+        fastq_list = self.uploader.logger.generate_fastq_list_status(
+            InsafluSampleCodes.STATUS_SUBMITTED)
 
         for fastq in fastq_list:
             project_name = fastq.sample_id
@@ -501,7 +511,7 @@ class TelevirFileProcess(PreMain):
 
         for sample_id in self.uploader.logger.available_samples:
 
-            if InsafluSampleCodes.STATUS_SUBMITTED in self.uploader.logger.get_sample_status_set(sample_id):
+            if InsafluSampleCodes.STATUS_TELEVIR_SUBMITTED in self.uploader.logger.get_sample_status_set(sample_id):
 
                 project_file = os.path.join(
                     self.run_metadata.metadata_dir,
@@ -521,8 +531,8 @@ class TelevirFileProcess(PreMain):
 
             self.deploy_televir_batch()
             self.download_project_results()
-            # _ = plot_project_results(
-            #    self.projects_results, self.processed.processed, self.run_metadata.output_dir)
+            _ = plot_project_results(
+                self.projects_results, self.processed.processed, self.run_metadata.output_dir)
 
     def run_return_plot(self):
 

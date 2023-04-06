@@ -1,3 +1,8 @@
+TODO:
+
+DELETE FILES FROM INSAFLU REMOTE.
+MANAGE WAIT TIME BETWEEN THREADS IF NO TELEVIR DEPLOYMENT IS REQUESTED.
+
 # Insaflu-upload
 
 **A tool to upload Fastq files to the INSaFLU database and perform metagenomics pathogen detection**

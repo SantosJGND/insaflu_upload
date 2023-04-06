@@ -126,6 +126,14 @@ class UploadLog:
             self.generate_InsafluFile(row) for _, row in self.log[(self.log["tag"] == "fastq")].iterrows()
         ]
 
+    def generate_fastq_list_status(self, status: int) -> List[InsafluFile]:
+        """
+        generate samples list"""
+
+        return [
+            self.generate_InsafluFile(row) for _, row in self.log[(self.log["tag"] == "fastq") & (self.log["status"] == status)].iterrows()
+        ]
+
     def get_sample_remotepaths(self, sample_id: str) -> List[str]:
         """
         get sample files"""
@@ -308,7 +316,7 @@ class InsafluUpload(ABC):
             return InsafluSampleCodes.STATUS_MISSING
         elif "Is Ready" in status_output:
             if "True" in status_output:
-                return InsafluSampleCodes.STATUS_UPLOADED
+                return InsafluSampleCodes.STATUS_SUBMITTED
             else:
                 return InsafluSampleCodes.STATUS_UPLOADING
 
@@ -325,9 +333,9 @@ class InsafluUpload(ABC):
 
         if "submitted" in submission_output:
             if "already" in submission_output:
-                return InsafluSampleCodes.STATUS_SUBMITTED
+                return InsafluSampleCodes.STATUS_TELEVIR_SUBMITTED
 
-            return InsafluSampleCodes.STATUS_SUBMITTED
+            return InsafluSampleCodes.STATUS_TELEVIR_SUBMITTED
 
         return InsafluSampleCodes.STATUS_SUBMISSION_ERROR
 
@@ -600,7 +608,7 @@ class InsafluUploadRemote(InsafluUpload):
         if success:
             print("Metadata submission success: ", metadata_path)
 
-        success_tag = InsafluSampleCodes.STATUS_UPLOADED if success else InsafluSampleCodes.STATUS_SUBMISSION_ERROR
+        success_tag = InsafluSampleCodes.STATUS_SUBMITTED if success else InsafluSampleCodes.STATUS_SUBMISSION_ERROR
 
         self.update_file_status(
             file_path=metadata_path,
@@ -670,7 +678,7 @@ class InsafluUploadRemote(InsafluUpload):
             sample_name, project_name
         )
 
-        if submit_status == InsafluSampleCodes.STATUS_SUBMITTED:
+        if submit_status == InsafluSampleCodes.STATUS_TELEVIR_SUBMITTED:
 
             self.rm_sample_files_remote(
                 sample_id,
