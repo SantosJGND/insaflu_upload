@@ -103,6 +103,8 @@ class ConnectorParamiko(Connector):
                 pkey=self.rsa_key
             )
 
+        except Exception as error:
+            print(error)
         except paramiko.ssh_exception.SSHException as error:
             print("SSH connection error")
             # print(error)
@@ -133,10 +135,14 @@ class ConnectorParamiko(Connector):
         """
         execute command using paramiko"""
 
+        print("executing command: ", command)
+
         with self as conn:
 
             stdin, stdout, stderr = self.conn.exec_command(command)
-            return stdout.read().decode("utf-8")
+            stdout = stdout.read().decode("utf-8")
+
+            return stdout
 
     def check_file_exists(self, file_path: str) -> bool:
         """
@@ -277,18 +283,12 @@ class ConnectorDocker(Connector):
     def upload_file(self, file_path: str, remote_path: str):
         """
         upload file using docker cp"""
-        print("uploading file")
 
         bash_command = f"docker cp {file_path} {self.server_name}:{remote_path}"
-
-        print(bash_command)
 
         process = subprocess.Popen(
             bash_command.split(), stdout=subprocess.PIPE)
         output, error = process.communicate()
-
-        print(output)
-        print(error)
 
     def download_file(self, file_path: str, remote_path: str):
         """

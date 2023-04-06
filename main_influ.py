@@ -2,7 +2,7 @@
 import argparse
 
 from insaflu_upload.connectors import ConnectorDocker, ConnectorParamiko
-from insaflu_upload.insaflu_upload import InfluConfig, InsafluFileProcess
+from insaflu_upload.insaflu_uploads import InfluConfig, InsafluFileProcess
 from insaflu_upload.upload_utils import (InsafluUploadRemote, UploadAll,
                                          UploadLast)
 from mfmc.records import ProcessActionMergeWithLast
@@ -87,7 +87,6 @@ def main():
         upload_strategy=upload_strategy,
         actions=actions,
         tsv_temp_name=args.tsv_t_n,
-        metadata_dir=args.tsv_t_dir,
         keep_name=args.keep_names,
         deploy_televir=args.televir
     )

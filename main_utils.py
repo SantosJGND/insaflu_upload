@@ -1,7 +1,7 @@
 import argparse
 
 from insaflu_upload.connectors import ConnectorDocker, ConnectorParamiko
-from insaflu_upload.insaflu_upload import InfluConfig, InsafluPreMain
+from insaflu_upload.insaflu_uploads import InfluConfig, InsafluPreMain
 from insaflu_upload.records import UploadAll, UploadLast
 from insaflu_upload.upload_utils import InsafluUploadRemote
 from mfmc.records import ProcessActionMergeWithLast

@@ -10,8 +10,8 @@ import paramiko
 import pytest
 from paramiko import SSHClient
 
-from insaflu_upload.insaflu_upload import (InfluDirectoryProcessing,
-                                           InsafluFileProcess)
+from insaflu_upload.insaflu_uploads import (InfluDirectoryProcessing,
+                                            InsafluFileProcess)
 from insaflu_upload.records import InfluConfig, InfluProcessed, MetadataEntry
 from insaflu_upload.upload_utils import (ConnectorParamiko, InsafluFile,
                                          InsafluSampleCodes,

@@ -3,7 +3,7 @@ import threading
 import time
 from threading import Event, Thread
 
-from insaflu_upload.insaflu_upload import InsafluPreMain
+from insaflu_upload.insaflu_uploads import InsafluPreMain
 from main_utils import generate_compressor
 
 

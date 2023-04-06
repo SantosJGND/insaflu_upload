@@ -1,4 +1,5 @@
 import configparser
+import logging
 import os
 import sys
 from abc import ABC, abstractmethod
@@ -83,7 +84,6 @@ class UploadLog:
         self.log = pd.DataFrame(
             columns=self.columns
         )
-        CWD = os.getcwd()
 
     @property
     def available_samples(self) -> List[str]:
@@ -132,6 +132,14 @@ class UploadLog:
 
         return [
             self.generate_InsafluFile(row) for _, row in self.log[(self.log["tag"] == "fastq") & (self.log["status"] == status)].iterrows()
+        ]
+
+    def generate_file_list_status(self, status: int) -> List[InsafluFile]:
+        """
+        generate samples list"""
+
+        return [
+            self.generate_InsafluFile(row) for _, row in self.log[(self.log["status"] == status)].iterrows()
         ]
 
     def get_sample_remotepaths(self, sample_id: str) -> List[str]:
@@ -399,6 +407,9 @@ class InsafluUploadRemote(InsafluUpload):
         self.prep_upload()
         self.test_insaflu_user_exists()
 
+        self.logging_logger = logging.getLogger("insaflu_upload")
+        self.logging_logger.setLevel(logging.DEBUG)
+
     def input_config(self, config_file: str):
         """
         input config"""
@@ -471,7 +482,8 @@ class InsafluUploadRemote(InsafluUpload):
         output = self.conn.execute_command(command=command)
 
         if self.televir_user not in output:
-            print(f"Insaflu user {self.televir_user} does not exist")
+            self.logging_logger.error(
+                f"Insaflu user {self.televir_user} does not exist")
             sys.exit(1)
 
     def update_log(self, sample_id: str, barcode: str, file_path: str, remote_path: str, status: int = UploadLog.STATUS_UPLOADED):
@@ -516,7 +528,7 @@ class InsafluUploadRemote(InsafluUpload):
         status = self.logger.STATUS_MISSING
         if self.conn.check_file_exists(remote_path):
             status = self.logger.STATUS_UPLOADED
-            print("File already exists: ", file_path)
+            self.logging_logger.error(f"File already exists: {file_path}")
 
         else:
             try:
@@ -528,8 +540,8 @@ class InsafluUploadRemote(InsafluUpload):
 
             except Exception as error:
 
-                print("Error uploading file: ", file_path)
-                print(error)
+                self.logging_logger.error(f"Error uploading file: {file_path}")
+                self.logging_logger.error(error)
                 status = self.logger.STATUS_ERROR
 
         self.logger.update_log(
@@ -548,10 +560,12 @@ class InsafluUploadRemote(InsafluUpload):
         if self.conn.check_file_exists(remote_path):
             try:
                 self.conn.download_file(remote_path, local_path)
-                print("File downloaded: ", remote_path, " to ", local_path)
+                self.logging_logger.info(f"File downloaded: {remote_path}")
+
             except Exception as error:
-                print("Error downloading file: ", remote_path)
-                print(error)
+                self.logging_logger.info(
+                    f"Error downloading file: {remote_path}")
+                self.logging_logger.info(error)
 
     def register_sample(self, fastq_path: str, sample_id: str = "NA", barcode: str = ""):
 
@@ -596,7 +610,8 @@ class InsafluUploadRemote(InsafluUpload):
         remote_metadata_path = self.get_remote_path(metadata_path)
 
         if not self.check_file_exists(remote_metadata_path):
-            print("Remote metadata file does not exist: ", remote_metadata_path)
+            self.logging_logger.info(
+                f"Remote metadata file does not exist: {remote_metadata_path}")
             return
 
         output = self.conn.execute_command(
@@ -606,7 +621,8 @@ class InsafluUploadRemote(InsafluUpload):
         success = self.check_submission_success(output)
 
         if success:
-            print("Metadata submission success: ", metadata_path)
+            self.logging_logger.info(
+                f"Metadata submission success: {metadata_path}")
 
         success_tag = InsafluSampleCodes.STATUS_SUBMITTED if success else InsafluSampleCodes.STATUS_SUBMISSION_ERROR
 
@@ -629,10 +645,11 @@ class InsafluUploadRemote(InsafluUpload):
     def clean_upload(self, file_path: str):
         """
         clean upload"""
+        file_exists = self.check_file_exists(file_path)
 
-        if self.check_file_exists(file_path):
+        if file_exists:
             _ = self.conn.execute_command(
-                f"rm {file_path}"
+                f"rm -f {file_path}"
             )
 
     def launch_televir_project(self, sample_name: str, project_name: Optional[str] = None):

@@ -51,15 +51,13 @@ class PreMain:
 
     def __init__(
         self,
-        fastq_dir: str,
         run_metadata: RunConfig,
-        real_sleep: int = 5
 
     ):
-        self.fastq_dir = fastq_dir
+        self.fastq_dir = run_metadata.fastq_dir
         self.run_metadata = run_metadata
         self.start_time = time.time()
-        self.real_sleep = real_sleep
+        self.real_sleep = run_metadata.sleep_time
 
         self.processed = Processed(
             output_dir=self.run_metadata.logs_dir)
@@ -346,8 +344,6 @@ class DirectoryProcessing():
         """
         set destination filepath"""
 
-        print("set_destination_filepath", fastq_file, fastq_dir)
-
         if self.run_metadata.keep_name:
             return os.path.join(
                 self.merged_gz_dir,
@@ -378,8 +374,6 @@ class DirectoryProcessingSimple(DirectoryProcessing):
         if self.run_metadata.actions:
             destination_file = self.set_destination_filepath(
                 fastq_file, self.fastq_dir)
-
-            print("destination_file", destination_file)
 
             self.append_to_file(fastq_file, destination_file)
 

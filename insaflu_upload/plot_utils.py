@@ -122,9 +122,6 @@ class TelevirPlotResults:
         data_max = self.accid_stats.groupby(["accid", "time_elapsed"])[
             stat].max().reset_index()
 
-        # fig = go.Scatter(data=data_max, x="time_elapsed", y=stat,
-        #                 color="accid", template="seaborn")
-
         fig = px.line(data_max, x="time_elapsed", y=stat,
                       color="accid", template="seaborn")
 

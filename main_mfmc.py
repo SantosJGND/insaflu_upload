@@ -28,16 +28,16 @@ def main():
     args = get_arguments()
 
     run_metadata = RunConfig(
-        args.out_dir,
-        args.tag,
+        fastq_dir=args.in_dir,
+        output_dir=args.out_dir,
+        name_tag=args.tag,
         actions=[ProcessActionMergeWithLast],
         keep_name=args.keep_names
+        sleep_time=args.sleep
     )
 
     compressor = PreMain(
-        args.in_dir,
         run_metadata,
-        args.sleep
     )
 
     compressor.run_until_killed()

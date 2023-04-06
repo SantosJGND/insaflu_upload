@@ -137,7 +137,6 @@ class Utils:
     def append_file_to_gz(filepath, filedest):
         """
         Copies the file 'filepath' to gzip file filedest."""
-        print("appending file: ", filepath, " to ", filedest, "")
 
         try:
             with xopen(filepath, 'rb') as f_in:
@@ -146,3 +145,7 @@ class Utils:
 
         except FileNotFoundError:
             print("File not found: ", filepath)
+            raise FileNotFoundError
+
+        except KeyboardInterrupt:
+            os.remove(filedest)
