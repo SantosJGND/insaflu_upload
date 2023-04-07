@@ -63,8 +63,9 @@ class InsafluFileProcessThread(Thread):
             pass
 
         except Exception as e:
-            print("HII")
             print(e)
+            self.stop()
+            self.error = True
             interrupt_main()
 
     def stop(self):
@@ -83,6 +84,7 @@ class TelevirFileProcessThread(Thread):
         self._stopevent = Event()  # initialize the event
         self.work_period = processor.real_sleep
         self.counter = 0
+        self.error = False
 
     def run(self):
         try:
@@ -111,8 +113,10 @@ class TelevirFileProcessThread(Thread):
             raise KeyboardInterrupt
 
         except Exception as e:
-            print("HII")
             print(e)
+            self.stop()
+            self.error = True
+
             interrupt_main()
 
     def stop(self):

@@ -160,6 +160,12 @@ class MainInsaflu:
 
                 return False
 
+        if not file_processor_task.is_alive() and not televir_processor_task.is_alive():
+            return False
+
+        if not file_processor_task.error or not televir_processor_task.error:
+            return False
+
         return True
 
     def run(self):

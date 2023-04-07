@@ -3,7 +3,7 @@ import signal
 import sys
 import time
 
-from main_influ_app_test import MainInsaflu
+from insaflu_upload.manager import MainInsaflu
 
 
 def signal_handler(signal, frame):

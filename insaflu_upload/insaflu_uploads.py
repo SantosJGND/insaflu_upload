@@ -458,6 +458,14 @@ class TelevirFileProcess(InsafluSetup):
                 project_name,
             )
 
+    def assign_project_name(self, insaflu_file: InsafluFile):
+        """
+        assign project name
+        """
+        project_name = self.run_metadata.name_tag
+
+        return project_name
+
     def deploy_televir_batch(self):
         """
         deploy televir batch
@@ -468,7 +476,7 @@ class TelevirFileProcess(InsafluSetup):
             InsafluSampleCodes.STATUS_SUBMITTED)
 
         for fastq in fastq_list:
-            project_name = fastq.sample_id
+            project_name = self.assign_project_name(fastq)
 
             file_name, _ = self.processed.get_run_info(fastq.file_path)
             self.deploy_televir_sample(
