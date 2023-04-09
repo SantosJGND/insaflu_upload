@@ -1,7 +1,6 @@
 import argparse
 
 from fastq_handler.fastq_handler import PreMain
-
 from fastq_handler.records import ProcessActionMergeWithLast, RunConfig
 
 
@@ -21,6 +20,9 @@ def get_arguments():
     parser.add_argument(
         "--keep_names", help="keep original file names", action="store_true")
 
+    parser.add_argument(
+        "--monitor", help="run indefinitely", action="store_true")
+
     return parser.parse_args()
 
 
@@ -33,7 +35,7 @@ def main():
         output_dir=args.out_dir,
         name_tag=args.tag,
         actions=[ProcessActionMergeWithLast],
-        keep_name=args.keep_names
+        keep_name=args.keep_names,
         sleep_time=args.sleep
     )
 
@@ -41,7 +43,13 @@ def main():
         run_metadata,
     )
 
-    compressor.run_until_killed()
+    if args.monitor:
+
+        compressor.run_until_killed()
+
+    else:
+
+        compressor.run()
 
 
 if __name__ == "__main__":

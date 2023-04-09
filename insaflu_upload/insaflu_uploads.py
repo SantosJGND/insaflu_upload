@@ -101,18 +101,11 @@ class InfluDirectoryProcessing(DirectoryProcessingSimple):
         self.processed = processed
         self.uploader = run_metadata.uploader
 
-        # self.metadir = os.path.join(
-        #    self.run_metadata.metadata_dir,
-        #    os.path.basename(fastq_dir.strip("/")),
-        #    self.metadata_dirname,
-        # )
-
     def prep_output_dirs(self):
         """create output dirs"""
 
         for outdir in [
             self.merged_gz_dir,
-            # self.metadir,
         ]:
             os.makedirs(outdir, exist_ok=True)
 

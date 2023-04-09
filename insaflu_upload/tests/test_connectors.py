@@ -10,11 +10,12 @@ import paramiko
 import pytest
 from paramiko import SSHClient
 
+from insaflu_upload.configs import InfluConfig
+from insaflu_upload.connectors import ConnectorParamiko
 from insaflu_upload.insaflu_uploads import (InfluDirectoryProcessing,
-                                            InsafluFileProcess)
-from insaflu_upload.records import InfluConfig, InfluProcessed, MetadataEntry
-from insaflu_upload.upload_utils import (ConnectorParamiko, InsafluFile,
-                                         InsafluSampleCodes,
+                                            InfluProcessed, InsafluFileProcess)
+from insaflu_upload.records import MetadataEntry
+from insaflu_upload.upload_utils import (InsafluFile, InsafluSampleCodes,
                                          InsafluUploadRemote, UploadLog)
 
 
@@ -130,7 +131,7 @@ class TestUploadLog(unittest.TestCase):
 
         assert upload_log.get_log().equals(pd.DataFrame(columns=UploadLog.columns))
 
-    def get_file_status(self):
+    def test_get_file_status(self):
 
         upload_log = UploadLog()
 
@@ -142,7 +143,7 @@ class TestUploadLog(unittest.TestCase):
             0,
             "test",)
 
-        assert upload_log.get_file_status("test") == "test"
+        assert upload_log.get_file_status("test") == 0
 
     def test_generate_InsafluSample(self):
 
@@ -184,6 +185,30 @@ class TestUploadLog(unittest.TestCase):
         assert sample.file_path == "test"
         assert sample.remote_path == "test"
         assert sample.status == 0
+
+    def test_get_fastq_by_status(self):
+
+        upload_log = UploadLog()
+
+        upload_log.new_entry(
+            "test",
+            "test",
+            "test",
+            "test",
+            0,
+            "fastq",)
+
+        upload_log.new_entry(
+            "test1",
+            "test1",
+            "test1",
+            "test1",
+            1,
+            "fastq",)
+
+        selected_samples = upload_log.generate_fastq_list_status(0)
+
+        assert len(selected_samples) == 1
 
     def get_sample_remotepaths(self):
         upload_log = UploadLog()

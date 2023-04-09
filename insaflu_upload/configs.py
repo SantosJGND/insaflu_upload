@@ -54,7 +54,6 @@ class InfluConfig(InfluParams, InfluUpload, InfluOutput):
         self.uploader = self.uploader
         self.upload_strategy = self.upload_strategy
         self.actions = self.actions
-        self.tsv_temp_name = self.tsv_temp_name.strip()
 
         self.keep_name = self.keep_name
         self.deploy_televir = self.deploy_televir

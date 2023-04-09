@@ -36,6 +36,7 @@ class InsafluFileProcessThread(Thread):
         self.processor = compressor
         self._stopevent = Event()  # initialize the event
         self.counter = 0
+        self.error = False
         self.schedule_stop = False
 
     def run(self):
@@ -47,14 +48,12 @@ class InsafluFileProcessThread(Thread):
                 print("--------------------")
                 print("Processing files, cycle number: {}".format(
                     self.counter))
-
                 self.processor.run()
 
                 self.counter += 1
 
                 if self.counter == 1:
                     if self.processor.run_metadata.monitor is False:
-
                         self._stopevent.set()
 
                 self.lock.release_to('B')
@@ -63,9 +62,10 @@ class InsafluFileProcessThread(Thread):
             pass
 
         except Exception as e:
+            print("Error in thread, stopping...")
             print(e)
-            self.stop()
             self.error = True
+            self.stop()
             interrupt_main()
 
     def stop(self):
@@ -100,6 +100,7 @@ class TelevirFileProcessThread(Thread):
                     execution_time = time.time() - start_time
 
                     self.counter += 1
+
                     if self.counter == 1:
                         if self.processor.run_metadata.monitor is False:
                             self._stopevent.set()
@@ -113,9 +114,11 @@ class TelevirFileProcessThread(Thread):
             raise KeyboardInterrupt
 
         except Exception as e:
+            print("Error in TelevirFileProcessThread")
             print(e)
-            self.stop()
             self.error = True
+
+            self.stop()
 
             interrupt_main()
 

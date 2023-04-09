@@ -22,8 +22,6 @@ class ArgsClass:
 
     in_dir: str
     out_dir: str
-    tsv_t_n: str
-    tsv_t_dir: str
     sleep: int
     tag: str
     config: str
@@ -47,10 +45,6 @@ class MainInsaflu:
             "-i", "--in_dir", help="Input directory", required=True)
         parser.add_argument("-o", "--out_dir",
                             help="Output directory", required=True)
-        parser.add_argument("-t", "--tsv_t_n",
-                            help="TSV template name", default="templates_comb.tsv")
-        parser.add_argument("-d", "--tsv_t_dir",
-                            help="TSV template directory", required=True)
         parser.add_argument("-s", "--sleep", help="Sleep time between checks in monitor mode", default=600,
                             type=int)
 
@@ -115,7 +109,6 @@ class MainInsaflu:
             uploader=insaflu_upload,
             upload_strategy=upload_strategy,
             actions=actions,
-            tsv_temp_name=args.tsv_t_n,
             keep_name=args.keep_names,
             sleep_time=args.sleep,
             deploy_televir=args.televir,
@@ -157,13 +150,12 @@ class MainInsaflu:
 
         if not args.monitor:
             if file_processor_task.counter > 0 and televir_processor_task.counter > 0:
-
                 return False
 
         if not file_processor_task.is_alive() and not televir_processor_task.is_alive():
             return False
 
-        if not file_processor_task.error or not televir_processor_task.error:
+        if file_processor_task.error or televir_processor_task.error:
             return False
 
         return True
@@ -182,20 +174,32 @@ class MainInsaflu:
 
         signal.signal(signal.SIGINT, signal_handler)
 
+        loop = True
+
         try:
+
             file_processor_task.start()
             televir_processor_task.start()
 
-            loop = True
-
             while loop:
-                loop = self.monitor_tasks(
+                new_loop = self.monitor_tasks(
                     file_processor_task, televir_processor_task, args)
+                loop = new_loop
+
                 time.sleep(2)
 
             print("Waiting for tasks to finish...")
 
+        except Exception as e:
+            print("Error in main thread, stopping...")
+            print(e)
+            print("Stopping tasks...")
+            file_processor_task.stop()
+            televir_processor_task.stop()
+
         finally:
+
+            print("Stopping tasks...")
 
             file_processor_task.stop()
             televir_processor_task.stop()
